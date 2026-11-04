@@ -4,6 +4,10 @@ The NAO describes a target Mega Bloks structure step by step. The participant ho
 
 The condition (`ai` / `human`) is written **only** to the log. The prompt, voice, gestures and behavior are identical in both conditions, and each log records a SHA-256 of the system prompt so you can confirm this (`summarize_log.py` warns if the hashes differ).
 
+## VIDEO LINK
+
+[Demo Video] (https://drive.google.com/file/d/1tWsVY2K5dTFUNsXjIQ5FXgopgV_XcIl8/view?usp=sharing)
+
 ## Setup
 
 ```
