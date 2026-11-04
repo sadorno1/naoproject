@@ -113,7 +113,7 @@ def extract_build(client, jpeg_bytes, model=config.VISION_MODEL, reasoning_effor
     content = []
     if reference_jpeg is not None:
         content.append({"type": "text", "text": (
-            "TARGET REFERENCE ONLY: the first image depicts the finished design. It may be an annotated "
+            "TARGET REFERENCE ONLY: the first image depicts the finished design. It is a text-free "
             "illustration viewed from above, not a photograph from NAO's camera. Do not assume matching "
             "viewpoint, scale, lighting, or colors. In the top-view diagram, NAO is at the top and the "
             "participant at the bottom. Two light-blue 2x2 bases touch side by side; one red 1x2 sits on "
@@ -121,7 +121,7 @@ def extract_build(client, jpeg_bytes, model=config.VISION_MODEL, reasoning_effor
             "which extend underneath the red blocks; they are not extra blocks. "
             "Use this image only to understand the intended layout. It is NOT evidence of the current "
             "build. The current build may be empty, incomplete, incorrect, or obscured. Never copy expected "
-            "pieces or infer hidden supports from the reference. Ignore its labels and arrows as objects. "
+            "pieces or infer hidden supports from the reference. "
             "Describe ONLY blocks actually visible in the SECOND image, the current camera photo, using "
             "the camera-coordinate conventions in the system prompt. If visibility prevents verification, "
             "report uncertainty rather than filling in the target.")})
