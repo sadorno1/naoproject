@@ -4,7 +4,7 @@ A NAO robot guides a participant step by step through building a small structure
 
 The code is for a between-subjects study. Participants are told that the robot is controlled either by an **AI** or by a **human**. The robot's behavior is the same in both conditions: the same prompt, voice, gestures and timing. The condition label is only written to the session log.
 
-The current target is a five-layer pillar using your eight Mega Bloks pieces: two light-blue 2x2s, four red 1x2s, and two blue 1x4s. See [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for the pillar and camera setup.
+The current target is a two-layer wall using four Mega Bloks pieces: two light-blue 2x2s and two red 1x2s. See [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for the wall and camera setup.
 
 ## Demo video
 
@@ -121,7 +121,7 @@ python -m pip install Pillow
 python -m unittest discover -s experiment/experiment/tests -v
 ```
 
-The 20 tests cover the eight-piece pillar inventory, missing and rotated pieces, blue versus light blue, unclear camera views, gesture overlap, head positioning, and restoration of movement settings. Passing these tests does not establish camera accuracy or physical motion quality.
+The offline tests cover the four-piece wall inventory, missing and rotated pieces, blue versus light blue, unclear camera views, gesture overlap, head positioning, and restoration of movement settings. Passing these tests does not establish camera accuracy or physical motion quality.
 
 **Camera framing** — after installing the full requirements, run from `experiment/experiment`. Replace `ROBOT_IP` with NAO's IP address:
 
@@ -130,12 +130,12 @@ python tools/camera_probe.py ROBOT_IP --set-head --camera 0 --out tmp/camera_top
 python tools/camera_probe.py ROBOT_IP --set-head --camera 1 --out tmp/camera_bottom
 ```
 
-Open the saved JPEGs and choose the camera that shows the entire pillar, studs, and block seams. Save that camera number in `CAMERA_INDEX` in `config.py`. If neither view works, adjust the build location or try `--pitch 0.45`, then save the successful `HEAD_PITCH` and `HEAD_YAW` too. Probe options preview settings without saving them. See [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for the target layout and more camera guidance.
+Open the saved JPEGs and choose the camera that shows the entire wall, studs, and block seams. Save that camera number in `CAMERA_INDEX` in `config.py`. If neither view works, adjust the build location or try `--pitch 0.45`, then save the successful `HEAD_PITCH` and `HEAD_YAW` too. Probe options preview settings without saving them. See [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for the target layout and more camera guidance.
 
 **Vision and dialogue without the robot** — provide an actual photo of your pieces, not an empty placeholder path. The full requirements and `experiment/.env` API key are needed. From `experiment/experiment`:
 
 ```powershell
-python run_session.py --dry-run --no-tts --pid pillar_dry01 --condition ai --image "C:/path/to/your/pillar.jpg" --force-new
+python run_session.py --dry-run --no-tts --pid wall_dry01 --condition ai --image "C:/path/to/your/wall.jpg" --force-new
 ```
 
 Type `/check` to assess the photo, normal text to talk to NAO, and `/end` to stop. The OpenAI API is still called; `--no-tts` skips speech generation. `--force-new` creates a fresh timestamped data folder if the test ID was already used.
@@ -145,10 +145,10 @@ Type `/check` to assess the photo, normal text to talk to NAO, and `/end` to sto
 ```powershell
 python tools/sensor_probe.py ROBOT_IP
 python tools/pregenerate_audio.py
-python run_session.py --ip ROBOT_IP --pid pillar_robot01 --condition ai --force-new
+python run_session.py --ip ROBOT_IP --pid wall_robot01 --condition ai --force-new
 ```
 
-The sensor probe stays running to show touch events; press Ctrl+C after testing the head and foot sensors, then run the next two commands. During a session, hold the front head sensor to speak and release it to send speech. Press a foot bumper to check the build; press `q` in the terminal to stop. Test an empty view, a partial pillar, a deliberately misplaced piece, and the finished pillar. Confirm calm motion and that unclear/hidden pieces do not lead to a false success. Photos and check results are saved under `data/` for review.
+The sensor probe stays running to show touch events; press Ctrl+C after testing the head and foot sensors, then run the next two commands. During a session, hold the front head sensor to speak and release it to send speech. Press a foot bumper to check the build; press `q` in the terminal to stop. Test an empty view, a partial wall, a deliberately misplaced piece, and the finished wall. Confirm calm motion and that unclear/hidden pieces do not lead to a false success. Photos and check results are saved under `data/` for review.
 
 ### 6. Summarize logs
 

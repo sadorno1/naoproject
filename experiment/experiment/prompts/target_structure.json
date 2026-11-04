@@ -1,7 +1,7 @@
 {
   "blocks": [
     {
-      "id": "light_blue_base",
+      "id": "left_base",
       "color": "light_blue",
       "type": "2x2",
       "orientation": 0,
@@ -11,73 +11,33 @@
       "front_visible": true
     },
     {
-      "id": "red_lower_front",
-      "color": "red",
-      "type": "1x2",
-      "orientation": 0,
-      "x": 0,
-      "y": 0,
-      "layer": 1,
-      "front_visible": true
-    },
-    {
-      "id": "red_lower_back",
-      "color": "red",
-      "type": "1x2",
-      "orientation": 0,
-      "x": 0,
-      "y": 1,
-      "layer": 1,
-      "front_visible": true
-    },
-    {
-      "id": "blue_middle_front",
-      "color": "blue",
-      "type": "1x4",
-      "orientation": 0,
-      "x": -1,
-      "y": 0,
-      "layer": 2,
-      "front_visible": true
-    },
-    {
-      "id": "blue_middle_back",
-      "color": "blue",
-      "type": "1x4",
-      "orientation": 0,
-      "x": -1,
-      "y": 1,
-      "layer": 2,
-      "front_visible": true
-    },
-    {
-      "id": "light_blue_upper",
+      "id": "right_base",
       "color": "light_blue",
       "type": "2x2",
       "orientation": 0,
-      "x": 0,
+      "x": 2,
       "y": 0,
-      "layer": 3,
+      "layer": 0,
       "front_visible": true
     },
     {
-      "id": "red_top_front",
+      "id": "left_red",
       "color": "red",
       "type": "1x2",
       "orientation": 0,
       "x": 0,
       "y": 0,
-      "layer": 4,
+      "layer": 1,
       "front_visible": true
     },
     {
-      "id": "red_top_back",
+      "id": "right_red",
       "color": "red",
       "type": "1x2",
       "orientation": 0,
-      "x": 0,
-      "y": 1,
-      "layer": 4,
+      "x": 2,
+      "y": 0,
+      "layer": 1,
       "front_visible": true
     }
   ]

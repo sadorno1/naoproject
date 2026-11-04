@@ -11,7 +11,7 @@ Coordinates, all in studs:
 - A 1x4 piece at orientation 0 covers 4 columns and 1 row; at orientation 90 it covers 1 column and 4 rows.
 
 Rules:
-- Inventory: two light-blue 2x2 pieces, four red 1x2 pieces, and two blue 1x4 pieces.
+- Inventory: two light-blue 2x2 pieces and two red 1x2 pieces.
 - This is context, not proof that every piece is present. Never fill in an expected piece from the inventory.
 - Distinguish light_blue (pale cyan/light blue) from blue (darker blue).
 - Count large Mega Bloks studs; do not apply LEGO sizes or physical dimensions.
@@ -22,4 +22,5 @@ Rules:
 - If a block is partly hidden but you can still tell its color, type, orientation and position, mark it "partial".
 - Do not invent hidden supporting blocks. If an actual piece can be seen but cannot be identified or positioned, use unknown/null and mark it not_visible. Never guess attributes.
 - Ignore hands, people, the robot, and anything that is not a Mega Bloks block.
+- If an area where a block could be is obscured, set scene_clear to false. Do not treat an obscured area as empty.
 - If there are no blocks, return an empty list.

@@ -20,12 +20,12 @@ class BuildTests(unittest.TestCase):
             {**{k: v for k, v in b.items() if k not in ("id", "front_visible")}, "visibility": "visible"}
             for b in self.target["blocks"]]}
 
-    def test_pillar_uses_exact_inventory(self):
+    def test_wall_uses_exact_inventory(self):
         self.assertEqual(Counter((b["color"], b["type"]) for b in self.target["blocks"]),
-                         {("light_blue", "2x2"): 2, ("red", "1x2"): 4, ("blue", "1x4"): 2})
-        self.assertEqual({b["layer"] for b in self.target["blocks"]}, set(range(5)))
+                         {("light_blue", "2x2"): 2, ("red", "1x2"): 2})
+        self.assertEqual({b["layer"] for b in self.target["blocks"]}, {0, 1})
 
-    def test_correct_pillar(self):
+    def test_correct_wall(self):
         self.assertEqual(vision.validate_observation(self.obs), [])
         self.assertTrue(vision.compare_build(self.obs, self.target)["match"])
 
@@ -39,14 +39,14 @@ class BuildTests(unittest.TestCase):
         self.obs["blocks"].pop()
         diff = vision.compare_build(self.obs, self.target)
         self.assertFalse(diff["match"])
-        self.assertEqual(diff["missing"], ["red_top_back"])
+        self.assertEqual(diff["missing"], ["right_red"])
 
     def test_light_blue_is_distinct(self):
         self.obs["blocks"][0]["color"] = "blue"
         self.assertFalse(vision.compare_build(self.obs, self.target)["match"])
 
     def test_rotated_long_piece(self):
-        self.obs["blocks"][1]["orientation"] = 90
+        self.obs["blocks"][2]["orientation"] = 90
         diff = vision.compare_build(self.obs, self.target)
         self.assertFalse(diff["match"])
         self.assertTrue(diff["wrong"][0]["issues"]["rotate"])
@@ -76,6 +76,28 @@ class BuildTests(unittest.TestCase):
         text = vision.describe_diff(vision.compare_build(self.obs, self.target))
         self.assertNotIn("Not placed yet", text)
         self.assertIn("clearer view", text)
+
+    def test_red_on_wrong_row_cannot_complete(self):
+        self.obs["blocks"][2]["y"] = 1
+        self.assertFalse(vision.compare_build(self.obs, self.target)["match"])
+
+    def test_offset_red_cannot_complete(self):
+        self.obs["blocks"][2]["x"] += 1
+        self.assertFalse(vision.compare_build(self.obs, self.target)["match"])
+
+    def test_uncertain_view_does_not_suggest_fix_for_other_block(self):
+        self.obs["blocks"][0].update(color="unknown", x=None, visibility="not_visible")
+        self.obs["blocks"][2]["y"] = 1
+        text = vision.describe_diff(vision.compare_build(self.obs, self.target))
+        self.assertIn("clearer view", text)
+        self.assertNotIn("Needs fixing:", text)
+        self.assertNotIn("Not placed yet", text)
+
+    def test_partial_symmetric_build_cannot_complete(self):
+        self.obs["blocks"] = self.obs["blocks"][:1]
+        diff = vision.compare_build(self.obs, self.target)
+        self.assertTrue(diff["alignment_ambiguous"])
+        self.assertFalse(diff["match"])
 
     def test_malformed_observation_is_rejected(self):
         self.obs["blocks"] = [None]

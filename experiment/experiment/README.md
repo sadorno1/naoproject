@@ -46,7 +46,7 @@ As in lab 3, the `.env` with `OPENAI_API_KEY=...` goes in the **parent** folder 
 5. **Vision accuracy**: put photos taken **with the robot camera at the session head pose** into `test_photos/correct/`, `test_photos/near_miss/` and `test_photos/wrong/`, then run
    `python tools/eval_vision.py test_photos --repeat 2`, and again with `--no-reference` if you use a reference photo.
    The number that matters most is **false matches**: those would end a session early.
-6. **Review** the configured Mega Bloks pillar target and fixed lines, then run `python tools/pregenerate_audio.py`. A real session refuses to start while any `TODO` remains.
+6. **Review** the configured Mega Bloks wall target and fixed lines, then run `python tools/pregenerate_audio.py`. A real session refuses to start while any `TODO` remains.
 
 ## Running a session
 

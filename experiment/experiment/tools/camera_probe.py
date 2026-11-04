@@ -111,7 +111,7 @@ def main():
             nao.restore_movement()
 
     print("\nSummary:")
-    print("Open the saved images: the entire pillar, large studs, and block seams must be visible.")
+    print("Open the saved images: the entire wall, large studs, and block seams must be visible.")
     print(f"If framing works, set CAMERA_INDEX={args.camera}, HEAD_PITCH={args.pitch}, HEAD_YAW={args.yaw} in config.py.")
     for name, ok in results.items():
         print(f"  {name:<15} {'works' if ok else 'does not work'}")

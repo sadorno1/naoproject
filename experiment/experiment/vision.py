@@ -278,6 +278,10 @@ def describe_diff(diff, participant_side=config.PARTICIPANT_SIDE):
         lines.append("Ask the participant to put the build in the marked camera area, move hands away, "
                      "and request another check. Do not call blocks missing, wrong, or complete.")
         return "\n".join(lines)
+    if diff["unverifiable_count"]:
+        lines.append("The camera could not verify the build reliably. Ask for a clearer view and another check.")
+        lines.append("Do not call blocks missing, suggest corrections, advance to the next step, or declare completion.")
+        return "\n".join(lines)
     lines.append("The build is complete and correct." if diff["match"] else "The build is not complete yet.")
     if diff["correct"]:
         lines.append("Correct so far: " + "; ".join(_block_name(by_id[t]) for t in diff["correct"]) + ".")
