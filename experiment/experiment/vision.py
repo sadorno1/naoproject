@@ -113,9 +113,18 @@ def extract_build(client, jpeg_bytes, model=config.VISION_MODEL, reasoning_effor
     content = []
     if reference_jpeg is not None:
         content.append({"type": "text", "text": (
-            "Reference photo of the finished target structure, from the same camera. Use it only to learn "
-            "what the blocks and colors look like in this lighting. The current build may be incomplete or "
-            "different. Describe only the second photo.")})
+            "TARGET REFERENCE ONLY: the first image depicts the finished design. It may be an annotated "
+            "illustration viewed from above, not a photograph from NAO's camera. Do not assume matching "
+            "viewpoint, scale, lighting, or colors. In the top-view diagram, NAO is at the top and the "
+            "participant at the bottom. Two light-blue 2x2 bases touch side by side; one red 1x2 sits on "
+            "the camera-side row of each base. The exposed light-blue studs belong to those same bases, "
+            "which extend underneath the red blocks; they are not extra blocks. "
+            "Use this image only to understand the intended layout. It is NOT evidence of the current "
+            "build. The current build may be empty, incomplete, incorrect, or obscured. Never copy expected "
+            "pieces or infer hidden supports from the reference. Ignore its labels and arrows as objects. "
+            "Describe ONLY blocks actually visible in the SECOND image, the current camera photo, using "
+            "the camera-coordinate conventions in the system prompt. If visibility prevents verification, "
+            "report uncertainty rather than filling in the target.")})
         content.append({"type": "image_url", "image_url": {"url": _data_url(reference_jpeg), "detail": "high"}})
     content.append({"type": "text", "text": "Photo of the current build:"})
     content.append({"type": "image_url", "image_url": {"url": _data_url(jpeg_bytes), "detail": "high"}})

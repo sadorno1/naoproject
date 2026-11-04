@@ -44,7 +44,7 @@ As in lab 3, the `.env` with `OPENAI_API_KEY=...` goes in the **parent** folder 
 3. **Gestures** (disabled in sessions by default; `--play` explicitly previews them): `python tools/gesture_probe.py <ip> --list-all`. Fix `SIT_ANIMATIONS` in `config.py` (the current Sit paths are unverified guesses). Then use `--play nod hi listen happy thinking excited surprised` to see each one seated. A missing animation means no gesture; Stand animations are never played while seated.
 4. **Models**: `python tools/bench_models.py`. It checks that every candidate exists, streams, and follows the "line 1 = expression" format (LLM), and that the vision candidates accept image input with a JSON schema. It also times TTS and transcription. Copy its picks into `config.py`.
 5. **Vision accuracy**: put photos taken **with the robot camera at the session head pose** into `test_photos/correct/`, `test_photos/near_miss/` and `test_photos/wrong/`, then run
-   `python tools/eval_vision.py test_photos --repeat 2`, and again with `--no-reference` if you use a reference photo.
+   `python tools/eval_vision.py test_photos --repeat 2`, and again with `--no-reference` to compare against the bundled top-view illustration enabled by default. Save separate `--out` files to retain both results. See the root `MEGA_BLOKS_SETUP.md` for details.
    The number that matters most is **false matches**: those would end a session early.
 6. **Review** the configured Mega Bloks wall target and fixed lines, then run `python tools/pregenerate_audio.py`. A real session refuses to start while any `TODO` remains.
 

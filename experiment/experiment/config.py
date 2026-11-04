@@ -131,7 +131,9 @@ VIDEO_RESOLUTION = 2                  #ALVideoDevice: 2 = 640x480
 IMAGE_MAX_SIDE = 1280
 IMAGE_JPEG_QUALITY = 95
 VIDEO_WARMUP_S = 0.6                 #let exposure settle before requesting a video frame
-REFERENCE_PHOTO_PATH = None           #optional photo of the correct build, shown to the vision model
+#Target illustration included with every camera check; set None to compare without a reference.
+#Resolve from this file so launches from another working directory still find the asset.
+REFERENCE_PHOTO_PATH = os.path.join(EXPERIMENT_DIR, "prompts", "reference_images", "four_block_top_view.png")
 #which side of the build the participant sits on, used to turn stud offsets into left/right words
 #"facing" = across from the robot (left/right mirrored), "same_side" = next to the robot
 PARTICIPANT_SIDE = "facing"

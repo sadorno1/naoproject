@@ -1,5 +1,6 @@
 """Offline regression tests: python -m unittest discover -s tests -v."""
 import io
+import json
 import sys
 import unittest
 from collections import Counter
@@ -110,6 +111,42 @@ class BuildTests(unittest.TestCase):
         image = Image.new("RGB", (1280, 960), "lightblue")
         jpeg = vision.preprocess_image(image)
         self.assertEqual(Image.open(io.BytesIO(jpeg)).size, (1280, 960))
+
+
+class ReferenceContextTests(unittest.TestCase):
+    def test_default_reference_is_readable_from_another_working_directory(self):
+        import os
+        previous = os.getcwd()
+        try:
+            os.chdir(Path(config.EXPERIMENT_DIR).parent)
+            jpeg = vision.preprocess_image(config.REFERENCE_PHOTO_PATH)
+            self.assertTrue(jpeg.startswith(b"\xff\xd8"))
+        finally:
+            os.chdir(previous)
+
+    def test_reference_and_live_photo_are_separate_and_empty_observation_stays_empty(self):
+        client = Mock()
+        empty = {"scene_clear": True, "notes": "No blocks visible.", "blocks": []}
+        client.chat.completions.create.return_value.choices = [Mock(message=Mock(content=json.dumps(empty)))]
+        obs, info = vision.extract_build(client, b"live", reference_jpeg=b"reference", retries=0)
+        content = client.chat.completions.create.call_args.kwargs["messages"][1]["content"]
+        self.assertIn("TARGET REFERENCE ONLY", content[0]["text"])
+        self.assertIn("SECOND image", content[0]["text"])
+        self.assertEqual(content[1]["image_url"]["url"], vision._data_url(b"reference"))
+        self.assertEqual(content[3]["image_url"]["url"], vision._data_url(b"live"))
+        self.assertEqual(obs["blocks"], [])
+        self.assertTrue(info["with_reference"])
+        self.assertFalse(vision.compare_build(obs, vision.load_target())["match"])
+
+    def test_no_reference_sends_only_live_photo(self):
+        client = Mock()
+        client.chat.completions.create.return_value.choices = [Mock(message=Mock(content=json.dumps(
+            {"scene_clear": True, "notes": "", "blocks": []})))]
+        _, info = vision.extract_build(client, b"live", retries=0)
+        content = client.chat.completions.create.call_args.kwargs["messages"][1]["content"]
+        self.assertEqual(len(content), 2)
+        self.assertEqual(content[1]["image_url"]["url"], vision._data_url(b"live"))
+        self.assertFalse(info["with_reference"])
 
 
 class MotionTests(unittest.TestCase):

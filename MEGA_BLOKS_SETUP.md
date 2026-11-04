@@ -61,7 +61,9 @@ python tools/camera_probe.py ROBOT_IP --set-head --camera 1 --pitch 0.45 --out t
 
 Save the successful `CAMERA_INDEX`, `HEAD_PITCH`, and `HEAD_YAW` values in `config.py`. The probe only previews these values; it does not save them. The default remains the top camera because the robot's physical setup has not been measured here. Use the saved probe image to confirm framing before running a participant session. Raw and model-input photos from session checks are also saved in the participant data folder for diagnosis.
 
-Start with `REFERENCE_PHOTO_PATH = None`. After evaluating the baseline, optionally set `REFERENCE_PHOTO_PATH` in `config.py` to a photo of the finished wall taken with that same camera and pose. It supplies examples of the pieces and lighting; it is not treated as evidence of the current build.
+The bundled [top-view illustration](experiment/experiment/prompts/reference_images/four_block_top_view.png) is enabled by default through `REFERENCE_PHOTO_PATH` in `config.py`. Every camera check sends it as the first image and the live camera photo as the second image. The model is told that the illustration explains the intended layout, uses a different viewpoint, and is never evidence that a piece has actually been placed. Only the live photo supplies observed blocks. The dialogue model receives the checked observations as text; it does not see the illustration directly.
+
+Set `REFERENCE_PHOTO_PATH = None` to disable it, or replace the path with a real photo of the finished wall. This illustration may help explain the layout, but improved recognition has not been established by live tests. Compare with and without it during rehearsal.
 
 ## Movement changes
 
@@ -101,7 +103,8 @@ Use the actual NAO camera and final lighting. Capture several completed walls an
 From `experiment/experiment`:
 
 ```powershell
-python tools/eval_vision.py test_photos --models gpt-4.1 --repeat 3 --no-reference
+python tools/eval_vision.py test_photos --models gpt-4.1 --repeat 3 --out tmp/with_reference.json
+python tools/eval_vision.py test_photos --models gpt-4.1 --repeat 3 --no-reference --out tmp/without_reference.json
 ```
 
 Review false matches, missed correct walls, and inconsistent repeats. Rehearse all four placements with a fresh participant ID. Clear hands and press the bumper at each step. The photo evaluator checks final match decisions; it does not test spoken guidance. Use the model already configured as a baseline before changing models. A reference photo must also be evaluated rather than assumed to help.
