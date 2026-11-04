@@ -1,9 +1,10 @@
-# nao_project
-# NAO Lego Build Guidance
+# NAO Mega Bloks Build Guidance
 
-A NAO robot guides a participant step by step through building a small structure out of large Lego blocks. Participants talk to the robot by holding its head sensor. They ask it to check their build by pressing its foot. The robot looks at the build with its camera, tells them what to fix, and ends the session once the structure matches the target.
+A NAO robot guides a participant step by step through building a small structure out of Mega Bloks. Participants talk to the robot by holding its head sensor. They ask it to check their build by pressing its foot. The robot looks at the build with its camera, tells them what to fix, and ends the session once the structure matches the target.
 
 The code is for a between-subjects study. Participants are told that the robot is controlled either by an **AI** or by a **human**. The robot's behavior is the same in both conditions: the same prompt, voice, gestures and timing. The condition label is only written to the session log.
+
+The current target is a five-layer pillar using your eight Mega Bloks pieces: two light-blue 2x2s, four red 1x2s, and two blue 1x4s. See [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for the pillar and camera setup.
 
 ## Demo video
 
@@ -14,14 +15,14 @@ The code is for a between-subjects study. Participants are told that the robot i
 **Talking to the robot**
 1. The participant holds the robot's **front head sensor** to speak, and the eyes turn green. The robot records audio with its microphone.
 2. When the sensor is released, the recording is copied to the laptop, transcribed with OpenAI speech-to-text, and deleted. No raw audio is kept.
-3. A language model writes a reply of one or two sentences. The first line of the reply picks one of seven expressions (nod, hi, listen, happy, thinking, excited, surprised), and the robot plays the matching seated animation.
+3. A language model writes a reply of one or two sentences. The first line of the reply picks an expression label. Physical gestures are disabled by default for calm motion; optional gestures are spaced apart and cannot overlap.
 4. The reply is converted to speech and played on the robot one sentence at a time, so the robot starts talking before the full reply has been generated.
 
 **Checking the build**
 1. The participant presses a **foot bumper**. The robot says "let me take a look" and takes a photo with its head camera.
 2. A vision model turns the photo into structured JSON describing each block's color, size, position, layer and orientation.
 3. Python code compares that description to the target structure. It reports which blocks are correct, wrong (moved, rotated, on the wrong layer, or extra) or not placed yet.
-4. The language model turns the result into a spoken hint. A full match ends the session with a goodbye.
+4. The language model turns the result into a spoken hint. A full, clear match ends the session with a goodbye. If the camera view is unclear or no blocks are visible, NAO asks for a clearer view instead of treating unseen blocks as mistakes.
 
 **Logging:** Every session writes a timestamped event log (`.jsonl`) with transcripts, robot utterances, gestures, sensor presses, build-check results, per-stage latencies and completion time. The log also stores hashes of the prompt files, which confirm that both conditions used identical prompts.
 
@@ -70,8 +71,8 @@ experiment/experiment/
 ### 2. Install
 
 ```bash
-git clone <this repo>
-cd nao_project
+git clone --branch molly https://github.com/sadorno1/naoproject.git
+cd naoproject
 python -m venv venv
 source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -91,7 +92,8 @@ Run these from `experiment/experiment/`:
 
 ```bash
 python tools/sensor_probe.py <robot-ip>         # check the head sensor and bumper names match config.py
-python tools/camera_probe.py <robot-ip> --set-head   # frame the build area, adjust HEAD_PITCH in config.py
+python tools/camera_probe.py <robot-ip> --set-head --camera 0 --out tmp/camera_top
+python tools/camera_probe.py <robot-ip> --set-head --camera 1 --out tmp/camera_bottom
 python tools/gesture_probe.py <robot-ip> --list-all  # check the seated animations exist
 python tools/bench_models.py                    # check the OpenAI models work and measure latency
 python tools/pregenerate_audio.py               # cache the greeting / "take a look" / goodbye audio
@@ -110,13 +112,43 @@ python run_session.py --ip <robot-ip> --pid P01 --condition ai      # or --condi
 - Press **`q`** in the terminal to end a session early.
 - Data is saved to `data/<pid>/`. The script refuses to reuse an existing participant ID unless you pass `--force-new`.
 
-### 5. Test without a robot (dry run)
+### 5. Test the update
 
-```bash
-python run_session.py --dry-run --pid test01 --condition ai --image test_photos/correct/<photo>.jpg [--no-tts]
+**Offline regression tests** — run from the repository root. These need only Pillow, and do not need a robot or API key:
+
+```powershell
+python -m pip install Pillow
+python -m unittest discover -s experiment/experiment/tests -v
 ```
 
-Type what the participant would say. Type `/check` to simulate a bumper press and `/end` to stop. The OpenAI API is still called.
+The 20 tests cover the eight-piece pillar inventory, missing and rotated pieces, blue versus light blue, unclear camera views, gesture overlap, head positioning, and restoration of movement settings. Passing these tests does not establish camera accuracy or physical motion quality.
+
+**Camera framing** — after installing the full requirements, run from `experiment/experiment`. Replace `ROBOT_IP` with NAO's IP address:
+
+```powershell
+python tools/camera_probe.py ROBOT_IP --set-head --camera 0 --out tmp/camera_top
+python tools/camera_probe.py ROBOT_IP --set-head --camera 1 --out tmp/camera_bottom
+```
+
+Open the saved JPEGs and choose the camera that shows the entire pillar, studs, and block seams. Save that camera number in `CAMERA_INDEX` in `config.py`. If neither view works, adjust the build location or try `--pitch 0.45`, then save the successful `HEAD_PITCH` and `HEAD_YAW` too. Probe options preview settings without saving them. See [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for the target layout and more camera guidance.
+
+**Vision and dialogue without the robot** — provide an actual photo of your pieces, not an empty placeholder path. The full requirements and `experiment/.env` API key are needed. From `experiment/experiment`:
+
+```powershell
+python run_session.py --dry-run --no-tts --pid pillar_dry01 --condition ai --image "C:/path/to/your/pillar.jpg" --force-new
+```
+
+Type `/check` to assess the photo, normal text to talk to NAO, and `/end` to stop. The OpenAI API is still called; `--no-tts` skips speech generation. `--force-new` creates a fresh timestamped data folder if the test ID was already used.
+
+**Full robot test** — from `experiment/experiment`, after saving the camera settings and setting the API key:
+
+```powershell
+python tools/sensor_probe.py ROBOT_IP
+python tools/pregenerate_audio.py
+python run_session.py --ip ROBOT_IP --pid pillar_robot01 --condition ai --force-new
+```
+
+The sensor probe stays running to show touch events; press Ctrl+C after testing the head and foot sensors, then run the next two commands. During a session, hold the front head sensor to speak and release it to send speech. Press a foot bumper to check the build; press `q` in the terminal to stop. Test an empty view, a partial pillar, a deliberately misplaced piece, and the finished pillar. Confirm calm motion and that unclear/hidden pieces do not lead to a false success. Photos and check results are saved under `data/` for review.
 
 ### 6. Summarize logs
 

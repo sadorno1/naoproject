@@ -1,8 +1,21 @@
 #Qi / NAO wrapper for the experiment, extended from the NaoProxy in lab 3.
 #every method falls back to a printed mock when its service is unavailable (robot not connected / dry run)
 import time
+import posixpath
 
 import config
+
+
+def photo_result_path(result, folder, name):
+    """NAOqi may return [directory, filename] or a complete filename."""
+    if isinstance(result, (list, tuple)) and result:
+        if len(result) >= 2 and isinstance(result[0], str) and isinstance(result[1], str):
+            return posixpath.join(result[0], result[1])
+        if isinstance(result[0], str):
+            return result[0]
+    if isinstance(result, str):
+        return result
+    return posixpath.join(folder, name + ".jpg")
 
 
 #connects to the robot; returns None on failure so callers can fall back to mocks like lab 3 did
@@ -46,6 +59,9 @@ class NaoProxy:
         self.audio_device = _load_service(session, "ALAudioDevice")
         self.memory = _load_service(session, "ALMemory")
         self.system = _load_service(session, "ALSystem")
+        self.awareness = _load_service(session, "ALBasicAwareness")
+        self.autonomous_moves = _load_service(session, "ALAutonomousMoves")
+        self._movement_restore = []
 
         # Reset any stuck recording states from previous crashed runs
         if self.audio_recorder:
@@ -57,6 +73,39 @@ class NaoProxy:
         self._subscribers = []        #keep qi subscribers alive
         self._installed_cache = {}
         self._started_behaviors = []
+        self._last_gesture_at = None
+
+    def quiet_movement(self):
+        """Temporarily pause competing head/body movement on NAOqi 2.1."""
+        if not config.QUIET_AUTONOMOUS_MOVEMENT or self._movement_restore:
+            return
+        controls = [
+            (self.awareness, "isAwarenessRunning", "stopAwareness", "startAwareness"),
+            (self.autonomous_moves, "getBackgroundStrategy", "setBackgroundStrategy", "none"),
+            (self.autonomous_moves, "getExpressiveListeningEnabled", "setExpressiveListeningEnabled", False),
+        ]
+        for service, getter, setter, value in controls:
+            if service is None:
+                continue
+            try:
+                previous = getattr(service, getter)()
+                if getter == "isAwarenessRunning":
+                    if previous:
+                        getattr(service, setter)()
+                        self._movement_restore.append((service, value, ()))
+                else:
+                    getattr(service, setter)(value)
+                    self._movement_restore.append((service, setter, (previous,)))
+            except Exception as e:
+                print(f"Could not pause {getter}: {e}")
+
+    def restore_movement(self):
+        for service, setter, args in reversed(self._movement_restore):
+            try:
+                getattr(service, setter)(*args)
+            except Exception as e:
+                print(f"Could not restore {setter}: {e}")
+        self._movement_restore.clear()
 
     @property
     def connected(self):
@@ -75,7 +124,7 @@ class NaoProxy:
         if self.motion and self.posture:
             print(f"Going to posture {posture}...")
             self.motion.wakeUp()
-            self.posture.goToPosture(posture, 0.5)
+            self.posture.goToPosture(posture, config.POSTURE_SPEED)
         else:
             print(f"[Mock Motion]: Posture {posture}")
 
@@ -83,9 +132,11 @@ class NaoProxy:
     def set_head_pose(self, yaw=config.HEAD_YAW, pitch=config.HEAD_PITCH, wait=True):
         if self.motion:
             self.motion.setStiffnesses("Head", 1.0)
-            self.motion.setAngles(["HeadYaw", "HeadPitch"], [yaw, pitch], 0.1)
             if wait:
-                time.sleep(1.0)
+                self.motion.angleInterpolationWithSpeed(["HeadYaw", "HeadPitch"], [yaw, pitch], config.HEAD_SPEED)
+                time.sleep(config.HEAD_SETTLE_S)
+            else:
+                self.motion.setAngles(["HeadYaw", "HeadPitch"], [yaw, pitch], config.HEAD_SPEED)
         else:
             print(f"[Mock Motion]: Head yaw={yaw} pitch={pitch}")
 
@@ -112,11 +163,15 @@ class NaoProxy:
 
     #starts the animation for an expression name (non-blocking). returns (behavior_path, status)
     #seated, only Sit animations are used; a missing animation means no gesture rather than an unsafe one
-    def change_expression(self, expression_name, posture=config.POSTURE):
+    def change_expression(self, expression_name, posture=config.POSTURE, preview=False):
         table = config.SIT_ANIMATIONS if posture == "Sit" else config.STAND_ANIMATIONS
         path = table.get(expression_name)
         if path is None:
             return None, "unknown_expression"
+        if not config.GESTURES_ENABLED and not preview:
+            return path, "disabled"
+        if not preview and self._last_gesture_at is not None and time.monotonic() - self._last_gesture_at < config.GESTURE_COOLDOWN_S:
+            return path, "cooldown"
         if not self.animate:
             print(f"[Mock Expression change]: {expression_name}")
             return path, "mock"
@@ -124,8 +179,12 @@ class NaoProxy:
             print(f"Animation not installed, skipping gesture: {path}")
             return path, "not_installed"
         try:
+            running = set(self.animate.getRunningBehaviors())
+            if running.intersection(self._started_behaviors):
+                return path, "busy"
             self.animate.startBehavior(path)
-            self._started_behaviors.append(path)
+            self._started_behaviors = [path]
+            self._last_gesture_at = time.monotonic()
             return path, "started"
         except Exception as e:
             print(f"Failed to start {path}: {e}")
@@ -146,6 +205,15 @@ class NaoProxy:
                 return True
             time.sleep(0.1)
         return False
+
+    def stop_gestures(self):
+        """Stop only behaviors this session started; preserve tracking until they finish."""
+        if self.animate:
+            for path in self._started_behaviors:
+                try:
+                    self.animate.stopBehavior(path)
+                except Exception as e:
+                    print(f"Could not stop {path}: {e}")
 
     #starts recording audio from the robot's front microphone, as in lab 3
     def start_recording(self, path):
@@ -192,11 +260,7 @@ class NaoProxy:
         self.photo.setResolution(config.PHOTO_RESOLUTION)
         self.photo.setPictureFormat("jpg")
         result = self.photo.takePicture(folder, name)
-        if isinstance(result, (list, tuple)) and result and isinstance(result[0], str):
-            return result[0]
-        if isinstance(result, str):
-            return result
-        return f"{folder}/{name}.jpg"
+        return photo_result_path(result, folder, name)
 
     #grabs one RGB frame with ALVideoDevice; returns a PIL image
     def capture_video_frame(self):
@@ -206,6 +270,7 @@ class NaoProxy:
         handle = self.video.subscribeCamera("experiment_check", config.CAMERA_INDEX,
                                             config.VIDEO_RESOLUTION, 11, 5)  #11 = kRGBColorSpace
         try:
+            time.sleep(config.VIDEO_WARMUP_S)
             frame = self.video.getImageRemote(handle)
         finally:
             self.video.unsubscribe(handle)

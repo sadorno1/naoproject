@@ -42,8 +42,8 @@ def load_target(path=config.TARGET_STRUCTURE_PATH, schema=None):
             raise ValueError(f"{where}: type {b['type']!r} not in schema enum {sorted(types)}")
         if b["orientation"] not in (0, 90):
             raise ValueError(f"{where}: orientation must be 0 or 90")
-        if b["type"] == "2x2" and b["orientation"] != 0:
-            raise ValueError(f"{where}: 2x2 blocks always use orientation 0")
+        if b["type"] in ("1x1", "2x2") and b["orientation"] != 0:
+            raise ValueError(f"{where}: square blocks always use orientation 0")
     if not data.get("blocks"):
         raise ValueError("target has no blocks")
     return data
@@ -56,15 +56,27 @@ def validate_observation(obs, schema=None):
     problems = []
     if not isinstance(obs, dict) or not isinstance(obs.get("blocks"), list):
         return ["output has no blocks list"]
+    if not isinstance(obs.get("scene_clear"), bool):
+        problems.append("scene_clear must be a boolean")
+    if not isinstance(obs.get("notes"), str):
+        problems.append("notes must be a string")
     for i, b in enumerate(obs["blocks"]):
+        if not isinstance(b, dict):
+            problems.append(f"block {i}: must be an object")
+            continue
         if b.get("color") not in item["color"]["enum"]:
             problems.append(f"block {i}: bad color {b.get('color')!r}")
         if b.get("type") not in item["type"]["enum"]:
             problems.append(f"block {i}: bad type {b.get('type')!r}")
         if b.get("orientation") not in (0, 90, None):
             problems.append(f"block {i}: bad orientation {b.get('orientation')!r}")
-        if not isinstance(b.get("layer"), int) or b["layer"] < 0:
+        if type(b.get("layer")) is not int or b["layer"] < 0:
             problems.append(f"block {i}: bad layer {b.get('layer')!r}")
+        for axis in ("x", "y"):
+            if b.get(axis) is not None and type(b[axis]) is not int:
+                problems.append(f"block {i}: bad {axis} {b[axis]!r}")
+        if b.get("type") in ("1x1", "2x2") and b.get("orientation") not in (0, None):
+            problems.append(f"block {i}: square blocks use orientation 0")
         if b.get("visibility") not in item["visibility"]["enum"]:
             problems.append(f"block {i}: bad visibility {b.get('visibility')!r}")
     return problems
@@ -211,10 +223,15 @@ def compare_build(observation, target):
     missing = [t["id"] for t in unmatched if t["front_visible"]]
     hidden_unconfirmed = [t["id"] for t in unmatched if not t["front_visible"]]
     required = [t["id"] for t in targets if t["front_visible"]]
-    match = not wrong and all(tid in matched_ids for tid in required)
+    scene_clear = observation.get("scene_clear", False)
+    match = (scene_clear and not unverifiable and not ambiguous and not wrong
+             and all(tid in matched_ids for tid in required))
 
     return {
         "match": match,
+        "scene_clear": scene_clear,
+        "notes": observation.get("notes", ""),
+        "no_blocks_seen": not observation["blocks"],
         "shift": [dx, dy],
         "alignment_ambiguous": ambiguous,
         "no_anchor": best_count == 0 and bool(observed),
@@ -235,7 +252,7 @@ def _layer_name(layer):
 
 
 def _block_name(b):
-    return f"{b['color']} {b['type']} block on {_layer_name(b['layer'])}"
+    return f"{b['color'].replace('_', ' ')} {b['type']} Mega Bloks piece on {_layer_name(b['layer'])}"
 
 
 #turns a camera-frame stud offset into words from the participant's point of view
@@ -256,6 +273,11 @@ def _direction_words(move, participant_side=config.PARTICIPANT_SIDE):
 def describe_diff(diff, participant_side=config.PARTICIPANT_SIDE):
     by_id = diff["_target_by_id"]
     lines = ["[BUILD CHECK RESULT]"]
+    if not diff["scene_clear"] or diff["no_blocks_seen"]:
+        lines.append("The camera view is unclear or no Mega Bloks are visible. The build cannot be assessed.")
+        lines.append("Ask the participant to put the build in the marked camera area, move hands away, "
+                     "and request another check. Do not call blocks missing, wrong, or complete.")
+        return "\n".join(lines)
     lines.append("The build is complete and correct." if diff["match"] else "The build is not complete yet.")
     if diff["correct"]:
         lines.append("Correct so far: " + "; ".join(_block_name(by_id[t]) for t in diff["correct"]) + ".")
@@ -276,12 +298,13 @@ def describe_diff(diff, participant_side=config.PARTICIPANT_SIDE):
         if diff["no_anchor"] and not fixes:
             fixes.append("its position does not fit the design")
         lines.append(f"Needs fixing: the {_block_name(o)}: " + ", and ".join(fixes) + ".")
-    if diff["missing"]:
+    if diff["missing"] and not diff["unverifiable_count"]:
         lines.append("Not placed yet (not mistakes): " + "; ".join(_block_name(by_id[t]) for t in diff["missing"]) + ".")
     if diff["hidden_unconfirmed"]:
         lines.append(f"{len(diff['hidden_unconfirmed'])} block(s) of the design cannot be seen from the camera.")
     if diff["unverifiable_count"]:
         lines.append(f"{diff['unverifiable_count']} block(s) could not be seen clearly.")
+        lines.append("Do not assume unseen blocks are missing. Ask for a clearer view before the next step.")
     if diff["alignment_ambiguous"]:
         lines.append("The position check was uncertain this time.")
     return "\n".join(lines)

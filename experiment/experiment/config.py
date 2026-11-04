@@ -1,4 +1,4 @@
-#single place for every tunable setting of the Lego build-guidance experiment
+#single place for every tunable setting of the Mega Bloks build-guidance experiment
 #nothing in here may depend on the study condition: the condition is only ever written to the log
 import os
 
@@ -49,6 +49,12 @@ HEAD_YAW = 0.0              #radians, set once at startup
 HEAD_PITCH = 0.35           #radians (positive = look down). frame the marked build spot with tools/camera_probe.py
 #animations move the head; True re-applies the fixed head pose after a gesture finishes, before a photo
 REASSERT_HEAD_POSE_BEFORE_PHOTO = True
+POSTURE_SPEED = 0.2
+HEAD_SPEED = 0.05                    #fraction of maximum joint speed
+HEAD_SETTLE_S = 0.6                  #pause after the blocking head movement
+QUIET_AUTONOMOUS_MOVEMENT = True     #pause awareness and background/listening moves during sessions
+GESTURES_ENABLED = False            #calm default; enable only after previewing installed animations
+GESTURE_COOLDOWN_S = 8.0             #minimum interval between gestures when enabled
 
 EYES_IDLE_RGB = (1.0, 1.0, 1.0)       #neutral white
 EYES_RECORDING_RGB = (0.0, 1.0, 0.0)  #green while the talk sensor is held
@@ -79,7 +85,7 @@ SIT_ANIMATIONS = {
     "surprised": "animations/Sit/Emotions/Negative/Surprise_1",
 }
 GESTURE_WAIT_TIMEOUT_S = 6.0          #max wait for a gesture to finish before taking a photo
-LOOK_GESTURE = "thinking"             #gesture played with the fixed "take a look" line
+LOOK_GESTURE = None                   #keep still during the camera check
 GREETING_GESTURE = None               #None = no gesture with the fixed greeting
 GOODBYE_GESTURE = None                #None = no gesture with the fixed goodbye
 
@@ -122,8 +128,9 @@ CAPTURE_METHOD = "auto"               #"auto" (photo, then video fallback), "pho
 CAMERA_INDEX = 0                      #0 = top camera, 1 = bottom camera
 PHOTO_RESOLUTION = 3                  #ALPhotoCapture: 2 = 640x480, 3 = 1280x960
 VIDEO_RESOLUTION = 2                  #ALVideoDevice: 2 = 640x480
-IMAGE_MAX_SIDE = 768
-IMAGE_JPEG_QUALITY = 85
+IMAGE_MAX_SIDE = 1280
+IMAGE_JPEG_QUALITY = 95
+VIDEO_WARMUP_S = 0.6                 #let exposure settle before requesting a video frame
 REFERENCE_PHOTO_PATH = None           #optional photo of the correct build, shown to the vision model
 #which side of the build the participant sits on, used to turn stud offsets into left/right words
 #"facing" = across from the robot (left/right mirrored), "same_side" = next to the robot

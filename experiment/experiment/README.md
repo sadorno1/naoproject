@@ -1,6 +1,6 @@
-# Lego build guidance experiment (NAO)
+# Mega Bloks build guidance experiment (NAO)
 
-The NAO describes a target Lego structure step by step. The participant holds the **front head sensor** to talk and presses a **foot bumper** to request a build check. The robot photographs the build, a vision model turns the photo into structured JSON, code compares it to the target, and the robot phrases the result. A full match ends the session.
+The NAO describes a target Mega Bloks structure step by step. The participant holds the **front head sensor** to talk and presses a **foot bumper** to request a build check. The robot photographs the build, a vision model turns the photo into structured JSON, code compares it to the target, and the robot phrases the result. A full match ends the session.
 
 The condition (`ai` / `human`) is written **only** to the log. The prompt, voice, gestures and behavior are identical in both conditions, and each log records a SHA-256 of the system prompt so you can confirm this (`summarize_log.py` warns if the hashes differ).
 
@@ -37,12 +37,12 @@ As in lab 3, the `.env` with `OPENAI_API_KEY=...` goes in the **parent** folder 
 
 1. **Sensors**: `python tools/sensor_probe.py <ip>`. Hold and release the front head sensor, then press each bumper. Make sure the printed names match `TALK_SENSOR_KEY` / `CHECK_SENSOR_KEYS` in `config.py`. Also watch for flicker: extra 0/1 events while you hold steadily.
 2. **Camera**: put the build on the marked spot, then run `python tools/camera_probe.py <ip> --set-head`. Adjust `HEAD_PITCH` / `HEAD_YAW` / `CAMERA_INDEX` until the build fills the frame, and set `CAPTURE_METHOD` to whichever method worked.
-3. **Gestures**: `python tools/gesture_probe.py <ip> --list-all`. Fix `SIT_ANIMATIONS` in `config.py` (the current Sit paths are unverified guesses). Then use `--play nod hi listen happy thinking excited surprised` to see each one seated. A missing animation means no gesture; Stand animations are never played while seated.
+3. **Gestures** (disabled in sessions by default; `--play` explicitly previews them): `python tools/gesture_probe.py <ip> --list-all`. Fix `SIT_ANIMATIONS` in `config.py` (the current Sit paths are unverified guesses). Then use `--play nod hi listen happy thinking excited surprised` to see each one seated. A missing animation means no gesture; Stand animations are never played while seated.
 4. **Models**: `python tools/bench_models.py`. It checks that every candidate exists, streams, and follows the "line 1 = expression" format (LLM), and that the vision candidates accept image input with a JSON schema. It also times TTS and transcription. Copy its picks into `config.py`.
 5. **Vision accuracy**: put photos taken **with the robot camera at the session head pose** into `test_photos/correct/`, `test_photos/near_miss/` and `test_photos/wrong/`, then run
    `python tools/eval_vision.py test_photos --repeat 2`, and again with `--no-reference` if you use a reference photo.
    The number that matters most is **false matches**: those would end a session early.
-6. **Edit** the three prompt files marked TODO, then run `python tools/pregenerate_audio.py`. A real session refuses to start while any `TODO` remains.
+6. **Review** the configured Mega Bloks pillar target and fixed lines, then run `python tools/pregenerate_audio.py`. A real session refuses to start while any `TODO` remains.
 
 ## Running a session
 
@@ -68,7 +68,7 @@ Type what the participant says. `/check [image]` simulates a bumper press, and `
 Hold the head sensor and the eyes turn green and recording starts. Release it and the eyes go back to neutral. Then:
 1. The wav is fetched over the single session SFTP connection.
 2. It's transcribed, and the wav is deleted on the laptop and on the robot.
-3. The LLM reply streams in. When line 1 arrives the gesture starts, and each finished sentence goes through TTS, upload and playback while the rest is still generating.
+3. The LLM reply streams in. When line 1 arrives an optional gesture is requested (disabled by default), and each finished sentence goes through TTS, upload and playback while the rest is still generating.
 
 Each turn logs a `latency` event with seconds since release for `wav_transfer`, `transcription`, `llm_first_token`, `tts_first_audio`, `playback_start` and more. Checks log `bumper_press`, `look_line_done`, `capture_done` and `vision_done`.
 

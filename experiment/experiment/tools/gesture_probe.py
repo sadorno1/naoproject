@@ -45,7 +45,7 @@ def main():
         nao.prepare_posture(args.posture)
         for name in args.play:
             print(f"Playing {name}...")
-            _, status = nao.change_expression(name, posture=args.posture)
+            _, status = nao.change_expression(name, posture=args.posture, preview=True)
             print(f"  {status}")
             nao.wait_for_gestures(timeout=10)
             time.sleep(0.5)

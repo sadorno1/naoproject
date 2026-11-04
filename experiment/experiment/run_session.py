@@ -114,6 +114,7 @@ class Session:
 
     # ------------------------------------------------------------ setup / teardown
     def setup(self):
+        self.nao.quiet_movement()
         self.nao.prepare_posture()
         self.nao.set_volume()
         self.nao.set_head_pose()
@@ -240,6 +241,9 @@ class Session:
             checks=self.checks,
         )
         self.nao.set_eyes(config.EYES_IDLE_RGB)
+        self.nao.stop_gestures()
+        self.nao.wait_for_gestures()
+        self.nao.restore_movement()
         self.link.cleanup()
         self.link.close()
         self.log.close()
@@ -360,12 +364,16 @@ class Session:
         self._say_fixed("look", look, config.LOOK_GESTURE)
         timer.mark("look_line_done")
         self.inputs.set_state(CHECKING)
-        gestures_done = self.nao.wait_for_gestures()
-        if config.REASSERT_HEAD_POSE_BEFORE_PHOTO and config.LOOK_GESTURE and not self.dry_run:
-            self.nao.set_head_pose(wait=True)
-
         raw_path = self.log.image_path(n)
         try:
+            gestures_done = self.nao.wait_for_gestures()
+            if not gestures_done:
+                self.nao.stop_gestures()
+                gestures_done = self.nao.wait_for_gestures()
+            if not gestures_done:
+                raise RuntimeError("Robot is still moving; camera check deferred")
+            if config.REASSERT_HEAD_POSE_BEFORE_PHOTO and not self.dry_run:
+                self.nao.set_head_pose(wait=True)
             method = self._capture(raw_path)
             timer.mark("capture_done")
             jpeg = self.vision.preprocess_image(raw_path)
@@ -423,7 +431,7 @@ class Session:
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="Run one Lego build session with the NAO.")
+    parser = argparse.ArgumentParser(description="Run one Mega Bloks build session with the NAO.")
     parser.add_argument("--ip", help="robot IP (not needed with --dry-run)")
     parser.add_argument("--pid", required=True, help="participant ID (also the data folder name)")
     parser.add_argument("--condition", required=True, choices=["ai", "human"],
@@ -463,6 +471,9 @@ def main(argv=None):
         session.log.event("fatal_error", error=repr(e))
         session.end("fatal_error", say_goodbye=False)
         raise
+    finally:
+        #Also restore settings if setup exits early (for example, a missing sensor).
+        session.nao.restore_movement()
     return 0
 
 

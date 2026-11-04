@@ -1,5 +1,9 @@
-The structure has three blocks and two layers.
+Build a basic five-layer Mega Bloks pillar using all eight pieces. All long pieces run left to right from the participant's view. Front means the side nearest the participant. Keep the pillar upright on the marked build spot.
 
-Layer 1 (bottom): A red 2x4 block lies flat on the build spot with its long side running left to right. Directly to the right of it, touching its short end, sits a blue 2x2 block.
+Layer 1 (bottom): Place one light-blue 2x2 piece flat on the table.
+Layer 2: Put one red 1x2 piece across the front row of the light-blue base. Put another red 1x2 across the back row, beside the first, making a complete 2x2 layer.
+Layer 3: Center one blue 1x4 across the front row of the red layer, with one stud overhanging at each end. Center the second blue 1x4 across the back row beside it. The two pieces form a wider 4x2 belt.
+Layer 4: Center the second light-blue 2x2 on the middle two columns of the blue belt, leaving one blue stud exposed at each end of each row.
+Layer 5 (top): Place one red 1x2 across the front row of the upper light-blue piece and the last red 1x2 across its back row. The red top has a 2x2 footprint.
 
-Layer 2 (top): A yellow 2x2 block sits on top of the red block, over its left end, so it covers the two left studs columns of the red block.
+Give one piece placement per instruction. The target JSON uses the camera's view; participant front/back is reversed when seated across from NAO. Both pieces in each paired layer must be checked; if a back piece is hidden, ask for a clearer view rather than declaring success.
