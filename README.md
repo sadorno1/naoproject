@@ -58,7 +58,6 @@ experiment/experiment/
   tools/                         setup and analysis scripts (see below)
 ```
 
-A more detailed technical README is in [`experiment/experiment/README.md`](experiment/experiment/README.md).
 
 ## How to run
 
