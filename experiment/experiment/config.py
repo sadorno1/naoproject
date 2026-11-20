@@ -114,7 +114,11 @@ VISION_RETRIES = 1
 
 TTS_MODEL = "tts-1"
 TTS_VOICE = "sage"
-TTS_FORMAT = "mp3"
+TTS_FORMAT = "wav"                    #16-bit PCM WAV enables local loudness adjustment without extra packages
+TTS_NORMALIZE = True
+TTS_TARGET_RMS_DBFS = -18.0           #desired average signal level; peak ceiling always takes priority
+TTS_PEAK_DBFS = -1.0                 #leave headroom to avoid digital clipping
+TTS_MAX_GAIN_DB = 12.0               #at most 4x amplitude; does not change NAO's hardware volume
 TTS_CANDIDATES = ["tts-1", "gpt-4o-mini-tts"]
 
 #"gpt-4o-mini-transcribe", "whisper-1", or "faster-whisper" (local, needs requirements-local-stt.txt)

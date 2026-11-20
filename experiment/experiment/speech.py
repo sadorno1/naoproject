@@ -7,14 +7,23 @@ import threading
 import time
 
 import config
+from audio_levels import boost_wav
 
 
 class TTS:
-    def __init__(self, client, model=config.TTS_MODEL, voice=config.TTS_VOICE, fmt=config.TTS_FORMAT):
+    def __init__(self, client, model=config.TTS_MODEL, voice=config.TTS_VOICE, fmt=config.TTS_FORMAT,
+                 normalize=config.TTS_NORMALIZE, target_rms_dbfs=config.TTS_TARGET_RMS_DBFS,
+                 peak_dbfs=config.TTS_PEAK_DBFS, max_gain_db=config.TTS_MAX_GAIN_DB):
         self.client = client
         self.model = model
         self.voice = voice
         self.format = fmt
+        self.normalize = normalize
+        self.target_rms_dbfs = target_rms_dbfs
+        self.peak_dbfs = peak_dbfs
+        self.max_gain_db = max_gain_db
+        if normalize and fmt != "wav":
+            raise ValueError("TTS_NORMALIZE requires TTS_FORMAT = 'wav'; disable normalization for other formats")
 
     #streams speech to a local file; on_first_audio() fires when the first audio bytes arrive
     def synthesize(self, text, local_path, on_first_audio=None):
@@ -32,10 +41,16 @@ class TTS:
                         if on_first_audio:
                             on_first_audio()
                     f.write(data)
+        if self.normalize:
+            with open(local_path, "rb") as f:
+                audio = boost_wav(f.read(), self.target_rms_dbfs, self.peak_dbfs, self.max_gain_db)
+            with open(local_path, "wb") as f:
+                f.write(audio)
 
     #cache file name depends on everything that changes the audio
     def cache_path(self, text, cache_dir=config.AUDIO_CACHE_DIR):
-        key = hashlib.sha256(f"{self.model}|{self.voice}|{self.format}|{text}".encode("utf-8")).hexdigest()[:20]
+        levels = ("wav-gain-v1", self.normalize, self.target_rms_dbfs, self.peak_dbfs, self.max_gain_db)
+        key = hashlib.sha256(f"{self.model}|{self.voice}|{self.format}|{levels}|{text}".encode("utf-8")).hexdigest()[:20]
         return os.path.join(cache_dir, f"{key}.{self.format}")
 
     def ensure_cached(self, text, cache_dir=config.AUDIO_CACHE_DIR):

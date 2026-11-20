@@ -116,3 +116,11 @@ Offline tests use simulated observations. Live camera/API evaluation and physica
 Hold NAO's **right foot bumper** to record speech; release it to send. Press NAO's **left foot bumper** to check the build. The head sensor no longer starts speech. Left/right refer to NAO's own sides, so they are mirrored when you face it. The eyes turn green while recording. Busy inputs remain ignored unless barge-in is enabled.
 
 The greeting now explains these controls. After pulling, run `python tools/pregenerate_audio.py` from `experiment/experiment` to cache the new greeting, then restart the session. Old audio is not reused for changed text. Verify the bumper names with `python tools/sensor_probe.py ROBOT_IP` before the demo.
+
+## Louder generated speech
+
+Speech now uses uncompressed WAV with a local bounded gain adjustment before upload. This applies to live replies and cached fixed phrases, keeping the same voice. The hardware volume (`VOLUME`, currently 70) is separate; the file player already uses a playback multiplier of 1.0. A robot volume setting of 100 cannot compensate for every quiet source recording.
+
+Settings in `config.py`: `TTS_NORMALIZE = True`, `TTS_TARGET_RMS_DBFS = -18.0`, `TTS_PEAK_DBFS = -1.0`, and `TTS_MAX_GAIN_DB = 12.0`. Quiet speech can receive up to about four times its original amplitude, limited by the peak ceiling. Silence and near-silence are left alone. This is constant gain, not compression: isolated loud peaks can limit the boost, so it does not guarantee equal perceived loudness for every sentence. No extra Python or system packages are needed.
+
+After pulling, rebuild fixed audio with `python tools/pregenerate_audio.py` from `experiment/experiment`, then restart. Format and gain settings are included in cache keys so old quiet MP3 phrases are not reused. No API audio generation or robot listening test was performed during implementation. Compare the greeting and a live reply at your normal listening position before deciding whether to raise `VOLUME`. To revert the audio processing, set `TTS_NORMALIZE = False` and `TTS_FORMAT = "mp3"`, regenerate cached phrases and restart.

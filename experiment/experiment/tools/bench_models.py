@@ -231,7 +231,7 @@ def main():
             keep = alt["median_first_audio_s"] > base["median_first_audio_s"]
             print(f"  -> {'keep ' + base['model'] if keep else 'switch to ' + alt['model'] + ' (not slower)'}")
         os.makedirs(config.TMP_DIR, exist_ok=True)
-        sample_audio = os.path.join(config.TMP_DIR, "bench_sample.mp3")
+        sample_audio = os.path.join(config.TMP_DIR, "bench_sample." + config.TTS_FORMAT)
         from speech import TTS
         TTS(client).synthesize(text, sample_audio)
 
