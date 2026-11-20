@@ -1,0 +1,7 @@
+{
+  "instruction": "Awesome! Now lets place a light green 2 by 1 block across the back red and blue pegs horizontally!",
+  "expected":"Participant places a light green block on top of the red and blue blocks and initates a check.",
+  "hint": "Make sure the light green 2 by 1 block is horizontal on the back row!",
+  "reference_photo": "build1_03.jpg",
+  "ready": true
+}

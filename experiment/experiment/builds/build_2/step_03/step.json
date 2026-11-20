@@ -1,0 +1,7 @@
+{
+  "instruction": "Awesome now lets place a 2 by 2 light blue block on top of the red 2 by 1 block. You should have the light blue 2 by 2 block hanging off the structure in the front towards me.",
+  "expected": "User places a light blue block on top of the red block and asks for a check.",
+  "hint": "Make sure you are putting the red block under the back two holes of the light blue block!",
+  "reference_photo": "build2_03.jpg",
+  "ready": true
+}

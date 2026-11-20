@@ -1,6 +1,7 @@
 {
-  "instruction": "",
-  "expected": "",
-  "reference_photo": "reference.jpg",
-  "ready": false
+  "instruction": "Ok lets start! Place a 4 by 1 dark blue block horizontally in front of me!",
+  "expected": "Participant places the blue block down and asks for a check.",
+  "hint": "Make sure the dark blue 4 by 1 block is horizontal in front of me!",
+  "reference_photo": "build2_01.jpg",
+  "ready": true
 }

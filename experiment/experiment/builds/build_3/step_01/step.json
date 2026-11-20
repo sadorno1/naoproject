@@ -1,6 +1,7 @@
 {
-  "instruction": "",
-  "expected": "",
-  "reference_photo": "reference.jpg",
-  "ready": false
+  "instruction": "Ok this build might be a little tricky so lets work hard together! Start by placing a light green 2 by 1 block vertically in front of me!",
+  "expected": "user places a light green block down and asks for a check.",
+  "hint": "Make sure the light green 2 by 1 block is vertical!",
+  "reference_photo": "build3_01.jpg",
+  "ready": true
 }

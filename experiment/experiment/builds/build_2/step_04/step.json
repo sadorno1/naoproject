@@ -1,0 +1,7 @@
+{
+  "instruction": "Awesome job! Now lets place a yellow 2 by one block vertically down the right side of the light blue 2 by 2 block.",
+  "expected": "user places a yellow block on top of the light blue block and asks for a check.",
+  "hint": "make sure the yellow 2 by 1 block is going vertically down the right side of the light blue 2 by 2 block.",
+  "reference_photo": "build2_04.jpg",
+  "ready": true
+}

@@ -1,0 +1,7 @@
+{
+  "instruction": "Great now place a 2 by 1 red block horizontally in the center of the horizontal 4 by 1 blue block! ",
+  "expected": "participant places a red block on top of the blue block and asks for a check.",
+  "hint": "make sure there is an empty blue peg on either side of the horizontal red 2 by 1 block!",
+  "reference_photo": "build2_02.jpg",
+  "ready": true
+}

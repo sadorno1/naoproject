@@ -1,7 +1,10 @@
 {
   "title": "Build 1",
-  "start_instruction": "Clear the build area before starting this activity.",
+  "start_instruction": "Clear the build area before starting this activity. Lets start build 1!",
   "steps": [
-    "step_01"
+    "step_01",
+    "step_02",
+    "step_03",
+    "step_04"
   ]
 }

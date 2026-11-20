@@ -1,6 +1,7 @@
 {
-  "instruction": "",
-  "expected": "",
-  "reference_photo": "reference.jpg",
-  "ready": false
+  "instruction": "Place a vertical 2 by 1 red block down in front of me!",
+  "expected": "Places a red block and asks for a check",
+  "hint":"make sure the red block is vertical not horizontal!",
+  "reference_photo": "build1_01.jpg",
+  "ready": true
 }

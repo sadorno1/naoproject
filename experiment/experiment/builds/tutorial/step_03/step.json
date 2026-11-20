@@ -1,7 +1,7 @@
 {
-  "instruction": "",
-  "expected": "",
-  "hint": "",
-  "reference_photo": "reference.jpg",
-  "ready": false
+  "instruction": "Awesome job so far! Now lets start building! to start please place a 2 by 2 light blue block down in front of me. When you are ready press my left foot!",
+  "expected": "Participant places a light blue block down infront of the robot and preforms a check.",
+  "hint": "Please place the light blue block that is a square in front of me!",
+  "reference_photo": "tut1.jpg",
+  "ready": true
 }

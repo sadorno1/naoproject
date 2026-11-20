@@ -1,0 +1,7 @@
+{
+  "instruction": "YAY, last step! Place an orange 1 by 1 block in the back left spot of the 2 by 2 light blue block. This would be left of the yellow block we just placed.",
+  "expected": "user places an orange block on the light blue block and asks for a check.",
+  "hint": "Make sure the orange 1 by 1 block is in the back left corner of the light blue block closest to you!",
+  "reference_photo": "build2_05finished.jpg",
+  "ready": true
+}

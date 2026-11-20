@@ -1,0 +1,7 @@
+{
+  "instruction": "Last step! Try placing a 1 by 1 orange block on the right side of the light green block.",
+  "expected": "User places an orange block on top of the green block and asks for a check.",
+  "hint": "Make sure you are placing the orange block on the back right corner of the structure on the green right peg closest to you. ",
+  "reference_photo": "build1_04finished.jpg",
+  "ready": true
+}

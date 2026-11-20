@@ -1,0 +1,7 @@
+{
+  "instruction": "Great, now place a dark blue 4 by 1 block horizontally behind the light green 2 by 1 block. Make sure when placing behind the right most peg of the Dark blue block is sitting behind the back peg of the light green block!",
+  "expected": "User places a dark blue block behind the light green block and then asks for a check.",
+  "hint": "Make sure the Dark Blue 4 by 1 block is horizontal behind the light green block. Make sure the right most peg of the dark blue block is behind the back peg of the light green block.",
+  "reference_photo": "build3_02.jpg",
+  "ready": true
+}

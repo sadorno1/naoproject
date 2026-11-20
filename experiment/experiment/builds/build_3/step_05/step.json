@@ -1,0 +1,7 @@
+{
+  "instruction": "Yay Last step! Place down a yellow 2 by 1 block vertically directly on top of the red 2 by 1 block on the right side of the structure! ",
+  "expected": "user places a yellow block on top of the red block and asks for a check.",
+  "hint": "Make sure the yellow 2 by 1 block is placed vertically. This is directly on top of the red block.",
+  "reference_photo": "build3_05finished.jpg",
+  "ready": true
+}

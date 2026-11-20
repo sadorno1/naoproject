@@ -2,6 +2,10 @@
   "title": "Build 3",
   "start_instruction": "Clear the build area before starting this activity.",
   "steps": [
-    "step_01"
+    "step_01",
+    "step_02",
+    "step_03",
+    "step_04",
+    "step_05"
   ]
 }

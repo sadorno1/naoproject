@@ -1,0 +1,7 @@
+{
+  "instruction": "Great! Now place a red 2 by one block vertically connecting the light green block and the dark blue 4 by 1 block together.",
+  "expected": "user places a red block on top of the light green and dark blue block and asks for a check.",
+  "hint": "Make sure the red 2 by 1 block is vertical, and on the back peg of the light green block and the far right peg of the dark blue horizontal block.",
+  "reference_photo": "build3_03.jpg",
+  "ready": true
+}

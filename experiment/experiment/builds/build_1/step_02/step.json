@@ -1,0 +1,7 @@
+{
+  "instruction": "Now lets place a vertical 2 by 1 dark blue block on the left side of the vertical red block!",
+  "expected": "Places a blue block next to the red block and preforms a check",
+  "hint":"Please make sure the blue block is vertical and on the left side of the red block",
+  "reference_photo": "build1_02.jpg",
+  "ready": true
+}

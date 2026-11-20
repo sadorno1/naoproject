@@ -1,0 +1,7 @@
+{
+  "instruction": "Great Job! Next lets place an orange 1 by 1 block on the far left peg of the dark blue horizontal block!",
+  "expected": "User places an orange block on the dark blue block and asks for a check.",
+  "hint": "Make sure the orange 1 by 1 block is on the left most peg of the dark blue 4 by one block, opposite of the red block!",
+  "reference_photo": "build3_04.jpg",
+  "ready": true
+}
