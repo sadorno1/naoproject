@@ -164,12 +164,14 @@ class BumperControlTests(unittest.TestCase):
 
 
 class ReferenceContextTests(unittest.TestCase):
-    def test_default_reference_is_readable_from_another_working_directory(self):
+    def test_step_reference_is_readable_from_another_working_directory(self):
         import os
+        from build_workflow import BuildWorkflow
+        photo = next(s["reference_photo"] for s in BuildWorkflow().steps if s["reference_photo"])
         previous = os.getcwd()
         try:
             os.chdir(Path(config.EXPERIMENT_DIR).parent)
-            jpeg = vision.preprocess_image(config.REFERENCE_PHOTO_PATH)
+            jpeg = vision.preprocess_image(photo)
             self.assertTrue(jpeg.startswith(b"\xff\xd8"))
         finally:
             os.chdir(previous)

@@ -2,7 +2,7 @@
 
 NAO guides a participant through a tutorial and three Mega Bloks builds. The tutorial teaches the controls and includes a mini build. Each construction step is checked against a reference photo taken on the robot and an expected-state description supplied by the experimenter.
 
-Development is currently on the **`molly` branch**. The control exercises are written, but **the tutorial mini build and the three main builds still need your photos, instructions and approval** before a participant session can run.
+Development is currently on the **`molly` branch**. The authored activities now contain **19 steps and 17 reference photos**: two control exercises, three tutorial placements, four build-1 placements, and five placements each for builds 2 and 3. All step files and photo paths pass offline validation. Camera accuracy and spoken instructions still need rehearsal on NAO.
 
 ## Quick start: take photos for upload
 
@@ -34,7 +34,7 @@ Greeting
 
 1. **Talk practice:** hold NAO's right bumper, say hello, then release. Its eyes turn green during recording. Understandable speech advances the tutorial; an empty recording does not.
 2. **Check practice:** press NAO's left bumper once. A successful camera capture completes this exercise, without judging a build. Pressing it before completing talk practice gives a reminder.
-3. **Tutorial mini build:** follow your authored placement instructions. Each placement needs a successful photo comparison. Two draft placement slots are provided at `tutorial/step_03` and `step_04`; change the number of placements in `tutorial/build.json` if needed.
+3. **Tutorial mini build:** follow the three authored placements at `tutorial/step_03` through `step_05`. Each placement needs a successful photo comparison; change the number of placements in `tutorial/build.json` if needed.
 4. **Three main builds:** finish each build one checked step at a time. NAO celebrates completing an activity, introduces the next one, and gives its starting/reset instruction.
 
 ## Participant controls
@@ -174,9 +174,12 @@ See [BUILD_WORKFLOW.md](BUILD_WORKFLOW.md) for the full structure, examples and 
 From `experiment/experiment`, after the steps are ready:
 
 ```bash
+python tools/validate_builds.py
 python tools/pregenerate_audio.py
 python run_session.py --ip ROBOT_IP --pid P01 --condition ai
 ```
+
+Validation checks shared phrases, ordered step definitions, approvals and readable reference photos without a robot or API key. Shared greetings/check phrases are stored in `experiment/experiment/fixed_lines.json`. The current workflow has no dependency on the deleted `prompts/` folder; archived text under `legacy_prompts/` is used only for the old checker.
 
 The cache tool prepares fixed phrases and instructions for ready activities. Unfinished activities are reported and skipped for caching. Encouragement, celebrations and hints are generated during the session. Speech uses the configured voice with bounded WAV gain adjustment to boost quiet audio before upload. Hardware `VOLUME` is a separate setting.
 
@@ -188,7 +191,7 @@ python run_session.py --ip ROBOT_IP --pid tutorial_test01 --condition ai --activ
 
 Use `--activity build_1`, `build_2` or `build_3` to rehearse one main build. Use a new participant ID for each session or pass `--force-new` to create a timestamped subfolder. Sessions start at the first selected step; they do not resume progress automatically. Press `q` to end early.
 
-If you end an unfinished session with `q`, NAO says: “Aw, it looks like we're out of time! Thank you for building with me. I had a lot of fun!” This is the editable `early_goodbye` phrase in `prompts/fixed_lines.json`. It is cached at startup and by `tools/pregenerate_audio.py`. Normal completion keeps the generated celebration. On Linux's line-based terminal reader, type `q` then Enter; in dry run use `/end`.
+If you end an unfinished session with `q`, NAO says: “Aw, it looks like we're out of time! Thank you for building with me. I had a lot of fun!” This is the editable `early_goodbye` phrase in `fixed_lines.json`. It is cached at startup and by `tools/pregenerate_audio.py`. Normal completion keeps the generated celebration. On Linux's line-based terminal reader, type `q` then Enter; in dry run use `/end`.
 
 The study condition can be `ai` or `human`. It is logged only; it does not choose a different implementation, prompt or voice.
 
@@ -244,4 +247,4 @@ The old single-build workflow remains available from `experiment/experiment`:
 python run_session.py --ip ROBOT_IP --pid old_demo01 --condition ai --legacy-build
 ```
 
-See [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for that demo. Its generated reference illustration and coordinate target are used only in legacy mode.
+See [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for that demo. Its coordinate target and text assets are archived under `legacy_prompts/`. The deleted generated illustration is not restored; `REFERENCE_PHOTO_PATH` defaults to `None`. None of these old targets are sent to the current step-photo checker.

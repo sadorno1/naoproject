@@ -4,7 +4,7 @@ The current participant flow is:
 
 **Talk practice → check practice → tutorial mini build → build 1 → build 2 → build 3.**
 
-The tutorial is finished only after its mini build passes. Each construction step needs your instruction, expected-state description and approved robot reference photo. The mini-build and main-build placements are drafts until you author them.
+The tutorial is finished only after its mini build passes. The authored activities now contain 19 steps, including 17 approved construction-step references. Run `python tools/validate_builds.py` here to check the files without a robot or API key. Shared phrases are in `fixed_lines.json`; the deleted `prompts/` folder is not needed by the current workflow. Old checker text is isolated in `legacy_prompts/`.
 
 See the [main README](../../README.md) for installation, API key setup, current controls, camera setup and run commands. See [BUILD_WORKFLOW.md](../../BUILD_WORKFLOW.md) for the detailed step structure, author-only capture workflow and JSON examples.
 
@@ -25,7 +25,7 @@ Tap and release the front head sensor for each photo. Press Ctrl+C to stop and c
 - NAO's head sensor is inactive. Head tapping is only used in the separate authoring tool.
 - Foot sides mean NAO's own sides, mirrored when facing it.
 - Press `q` in the terminal to end early.
-- An early experimenter stop says the friendly `early_goodbye` phrase from `prompts/fixed_lines.json`, rather than claiming the build is finished. On Linux type `q` then Enter; in dry run use `/end`. Normal completion keeps its celebration.
+- An early experimenter stop says the friendly `early_goodbye` phrase from `fixed_lines.json`, rather than claiming the build is finished. On Linux type `q` then Enter; in dry run use `/end`. Normal completion keeps its celebration.
 
 ## Commands from this folder
 

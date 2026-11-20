@@ -2,6 +2,8 @@
 
 The default session runs **tutorial → build 1 → build 2 → build 3**, in that order. The tutorial combines a two-step controls walkthrough with a photo-checked mini build; each main build can also have as many photo-checked steps as you need. The old four-block demo remains available with `--legacy-build`.
 
+The current authored course has 19 steps and 17 reference images: tutorial control practice plus three mini-build placements, then 4/5/5 placements in builds 1/2/3. From `experiment/experiment`, run `python tools/validate_builds.py` to check every step and photo before caching audio. Shared phrases now live in `fixed_lines.json`; the deleted old `prompts/` folder is not used by the current workflow. Text under `legacy_prompts/` is only for the earlier checker.
+
 ## Participant tutorial
 
 The tutorial teaches how to use NAO, then lets the participant practice those controls on a mini build:
@@ -43,7 +45,7 @@ experiment/experiment/builds/
     step_01/step.json
 ```
 
-The tutorial is supplied with controls instructions and two draft mini-build placement slots. The three main builds start with a blank, unapproved first step. No build designs or expected photos have been invented. You supply those photos and expected states. A full session refuses to start until the tutorial mini build and all three main builds have reviewed photo steps, nonempty instructions, expected descriptions, and readable reference photos. Captured photo steps store `reference.jpg` and `capture.json` beside their `step.json`.
+The current tutorial mini build and main builds have authored instructions, expected states and approved robot photos. When adding or changing placements, a full session still refuses to start unless every construction step has reviewed text, a readable reference photo and `ready: true`. Captured photo steps store a reference image and optional `capture.json` beside their `step.json`; descriptive image filenames are supported through `reference_photo`.
 
 `build.json` contains a title, a spoken `start_instruction` (such as clearing the build area), and the ordered `steps` list. Every listed step is required. The tool appends newly captured steps to this list in numeric order. Edit the list if you want a different order or remove an unused step. Do not remove a step whose placement is required by a later reference unless you also update the instructions.
 

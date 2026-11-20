@@ -1,0 +1,44 @@
+{
+  "blocks": [
+    {
+      "id": "left_base",
+      "color": "light_blue",
+      "type": "2x2",
+      "orientation": 0,
+      "x": 0,
+      "y": 0,
+      "layer": 0,
+      "front_visible": true
+    },
+    {
+      "id": "right_base",
+      "color": "light_blue",
+      "type": "2x2",
+      "orientation": 0,
+      "x": 2,
+      "y": 0,
+      "layer": 0,
+      "front_visible": true
+    },
+    {
+      "id": "left_red",
+      "color": "red",
+      "type": "1x2",
+      "orientation": 0,
+      "x": 0,
+      "y": 0,
+      "layer": 1,
+      "front_visible": true
+    },
+    {
+      "id": "right_red",
+      "color": "red",
+      "type": "1x2",
+      "orientation": 0,
+      "x": 2,
+      "y": 0,
+      "layer": 1,
+      "front_visible": true
+    }
+  ]
+}

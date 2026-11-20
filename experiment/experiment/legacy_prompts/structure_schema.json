@@ -1,0 +1,101 @@
+{
+  "name": "mega_bloks_build",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "blocks",
+      "notes",
+      "scene_clear"
+    ],
+    "properties": {
+      "blocks": {
+        "type": "array",
+        "description": "Each visible Mega Bloks piece once, including partially visible pieces. Do not invent hidden supporting pieces.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "color",
+            "type",
+            "orientation",
+            "x",
+            "y",
+            "layer",
+            "visibility"
+          ],
+          "properties": {
+            "color": {
+              "type": "string",
+              "enum": [
+                "red",
+                "light_blue",
+                "blue",
+                "yellow",
+                "green",
+                "white",
+                "orange",
+                "black",
+                "unknown"
+              ],
+              "description": "Actual piece color. Distinguish light_blue from blue. Use unknown under uncertain lighting."
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "1x2",
+                "1x4",
+                "2x2",
+                "unknown"
+              ],
+              "description": "Mega Bloks footprint in large studs: 1x2 has two studs in one row, 1x4 has four in one row, 2x2 has four in a square. Use unknown if uncertain."
+            },
+            "orientation": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "0 = long side runs left to right as seen from the camera, 90 = long side runs front to back. Always 0 for 2x2. null if you cannot tell."
+            },
+            "x": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "Stud column of the block's leftmost studs as seen from the camera. 0 = leftmost stud column of the bottom layer. null if you cannot tell."
+            },
+            "y": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "Stud row of the block's front studs (nearest the camera). 0 = front row of the bottom layer. Increases away from the camera. null if you cannot tell."
+            },
+            "layer": {
+              "type": "integer",
+              "description": "0 = resting on the table or baseplate, 1 = on top of layer 0, and so on."
+            },
+            "visibility": {
+              "type": "string",
+              "enum": [
+                "visible",
+                "partial",
+                "not_visible"
+              ],
+              "description": "visible = clearly seen; partial = partly hidden but position is clear; not_visible = hidden or unclear: its existence is inferred, do not guess its attributes (use unknown / null)."
+            }
+          }
+        }
+      },
+      "notes": {
+        "type": "string",
+        "description": "One short sentence about anything that made the photo hard to read (occlusion, glare, blur). Empty string if nothing."
+      },
+      "scene_clear": {
+        "type": "boolean",
+        "description": "True only if the build area is in frame, adequately lit, still, and clear of hands. False if blur, occlusion, darkness, or framing prevents assessment. An empty scene can be clear; never infer that a build is absent just because it is out of frame."
+      }
+    }
+  }
+}

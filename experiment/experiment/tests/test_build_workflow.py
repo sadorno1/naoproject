@@ -129,6 +129,11 @@ class WorkflowTests(unittest.TestCase):
         for relative in ("build.json", "step_01/step.json", "step_02/step.json", "step_03/step.json", "step_04/step.json"):
             write(self.root / "tutorial" / relative,
                   json.loads((BUILDS_DIR / "tutorial" / relative).read_text(encoding="utf-8")))
+        #A fixed two-placement test fixture independent of how many real tutorial placements are authored.
+        spec_path = self.root / "tutorial/build.json"
+        spec = json.loads(spec_path.read_text())
+        spec["steps"] = ["step_01", "step_02", "step_03", "step_04"]
+        write(spec_path, spec)
         for number in (3, 4):
             step_dir = self.root / "tutorial" / f"step_{number:02d}"
             write(step_dir / "step.json", dict(instruction=f"Practice placement {number - 2}.",
@@ -151,8 +156,13 @@ class WorkflowTests(unittest.TestCase):
         self.assertIsNotNone(flow.steps[2]["reference_photo"])
 
     def test_draft_mini_build_prevents_tutorial_starting(self):
-        with self.assertRaisesRegex(ValueError, "step_03 instruction"):
-            BuildWorkflow(BUILDS_DIR, only="tutorial")
+        self.controls_session()
+        path = self.root / "tutorial/step_03/step.json"
+        data = json.loads(path.read_text())
+        data["ready"] = False
+        write(path, data)
+        with self.assertRaisesRegex(ValueError, "ready=true"):
+            BuildWorkflow(self.root, only="tutorial")
 
     def test_tutorial_understood_speech_advances_to_check_practice(self):
         session = self.controls_session()

@@ -1,0 +1,11 @@
+Build a low, two-layer wall using exactly four Mega Bloks: two light-blue 2x2 pieces and two red 1x2 pieces. Put the other pieces away, outside the camera view.
+Keep the build on the marked spot. The two bases touch side by side, making a rectangle four studs wide and two studs deep. Both red pieces run left to right, on the row nearest NAO's camera, leaving the other row of light-blue studs exposed.
+The participant sits opposite NAO: the row nearest NAO is the row FARTHEST FROM THE PARTICIPANT. Mark that row on the table with a small label "NAO SIDE" before starting. Use this label when explaining where the red blocks go.
+Give these placements individually:
+1. Place one light-blue 2x2 flat on the marked spot.
+2. Place the second light-blue 2x2 directly beside it, edges touching and front/back edges aligned.
+3. Place one red 1x2 across the two studs on the NAO SIDE of either base.
+4. Place the other red 1x2 across the two studs on the NAO SIDE of the remaining base.
+The completed red row is four studs wide. There are no overhangs and no blocks behind the red row. Either base may be placed first; either red may be placed first.
+Ask for a bumper camera check after each placement. Do not treat future steps as errors. If a previously verified block cannot be seen now, ask for a clearer view rather than instructing the participant to add another one.
+The target JSON uses camera coordinates; all four pieces must be visibly verified for completion.

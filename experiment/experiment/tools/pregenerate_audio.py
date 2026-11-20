@@ -1,5 +1,5 @@
 #pre-generates the cached audio for the fixed lines (greeting, 3 "take a look" lines, goodbye)
-#run it after editing prompts/fixed_lines.json, so the first session does not wait for TTS.
+#run it after editing fixed_lines.json, so the first session does not wait for TTS.
 #run_session.py also generates any missing file at startup, before the participant is greeted
 #usage: python tools/pregenerate_audio.py
 import os

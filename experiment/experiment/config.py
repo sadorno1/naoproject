@@ -136,21 +136,21 @@ VIDEO_RESOLUTION = 2                  #ALVideoDevice: 2 = 640x480
 IMAGE_MAX_SIDE = 1280
 IMAGE_JPEG_QUALITY = 95
 VIDEO_WARMUP_S = 0.6                 #let exposure settle before requesting a video frame
-#Target illustration included with every camera check; set None to compare without a reference.
-#Resolve from this file so launches from another working directory still find the asset.
-REFERENCE_PHOTO_PATH = os.path.join(EXPERIMENT_DIR, "prompts", "reference_images", "four_block_top_view.png")
+#Optional reference for the legacy checker only. The current workflow uses each step's own photo.
+REFERENCE_PHOTO_PATH = None
 #which side of the build the participant sits on, used to turn stud offsets into left/right words
 #"facing" = across from the robot (left/right mirrored), "same_side" = next to the robot
 PARTICIPANT_SIDE = "facing"
 
 # ---------------------------------------------------------------- files
-PROMPTS_DIR = os.path.join(EXPERIMENT_DIR, "prompts")
+#Archived text assets used only by --legacy-build and its regression tests.
+PROMPTS_DIR = os.path.join(EXPERIMENT_DIR, "legacy_prompts")
 SYSTEM_PROMPT_PATH = os.path.join(PROMPTS_DIR, "system_prompt.txt")
 TARGET_DESCRIPTION_PATH = os.path.join(PROMPTS_DIR, "target_description.txt")
 TARGET_STRUCTURE_PATH = os.path.join(PROMPTS_DIR, "target_structure.json")
 STRUCTURE_SCHEMA_PATH = os.path.join(PROMPTS_DIR, "structure_schema.json")
 VISION_PROMPT_PATH = os.path.join(PROMPTS_DIR, "vision_prompt.txt")
-FIXED_LINES_PATH = os.path.join(PROMPTS_DIR, "fixed_lines.json")
+FIXED_LINES_PATH = os.path.join(EXPERIMENT_DIR, "fixed_lines.json")
 DATA_DIR = os.path.join(EXPERIMENT_DIR, "data")
 AUDIO_CACHE_DIR = os.path.join(EXPERIMENT_DIR, "audio_cache")
 TMP_DIR = os.path.join(EXPERIMENT_DIR, "tmp")

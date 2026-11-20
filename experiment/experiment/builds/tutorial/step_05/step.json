@@ -2,6 +2,6 @@
   "instruction": "Ok last step please put another light green 2 by 1 block on the left side of the 2 by 2 light blue block.",
   "expected": "participant places the light green block on the left side of the light blue block and preforms a check.",
   "hint": "Thats not quite right, please place the 2 by 1 light green block on the left side of the 2 by 2 light blue block, make sure it is going down the left side!",
-  "reference_photo": "tut3.jpg",
+  "reference_photo": "tut3finished.jpg",
   "ready": true
 }
