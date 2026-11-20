@@ -8,6 +8,16 @@ The tutorial is finished only after its mini build passes. Each construction ste
 
 See the [main README](../../README.md) for installation, API key setup, current controls, camera setup and run commands. See [BUILD_WORKFLOW.md](../../BUILD_WORKFLOW.md) for the detailed step structure, author-only capture workflow and JSON examples.
 
+## Quick start: photo-only mode
+
+From this folder, with the environment activated:
+
+```bash
+python run_session.py --photo-mode --ip ROBOT_IP
+```
+
+Tap and release the front head sensor for each photo. Press Ctrl+C to stop and create a ZIP; upload the ZIP at the printed location to share all photos together. No API key or completed builds are needed. The originals remain in `photo_sessions/`. This is an author-only mode, separate from the participant session. Photos must still be matched to the appropriate activity/step afterward.
+
 ## Controls in the participant session
 
 - Hold NAO's **right foot bumper** to talk; release to send. Eyes are green while recording.

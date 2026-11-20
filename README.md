@@ -4,6 +4,22 @@ NAO guides a participant through a tutorial and three Mega Bloks builds. The tut
 
 Development is currently on the **`molly` branch**. The control exercises are written, but **the tutorial mini build and the three main builds still need your photos, instructions and approval** before a participant session can run.
 
+## Quick start: take photos for upload
+
+From your Linux repository folder:
+
+```bash
+git switch molly
+git pull --ff-only origin molly
+source .venv/bin/activate
+cd experiment/experiment
+python run_session.py --photo-mode --ip ROBOT_IP
+```
+
+Replace `ROBOT_IP` with NAO's IP address. **Tap and release the front head sensor** to save each numbered photo. **Press Ctrl+C** when finished; the program prints the path to a ZIP containing all saved photos and their capture details. Upload that ZIP to share the collection at once. Originals are kept in `photo_sessions/` too.
+
+Photo-only mode needs no API key, participant ID or completed build setup. It does not run the chatbot or upload anything automatically. Keep track of which photo numbers belong to each tutorial/build step; the photos are not assigned or approved as references automatically. Run this mode separately from the participant session. For a custom output parent, add `--photo-dir ~/nao_photos`.
+
 ## Participant flow
 
 ```text
