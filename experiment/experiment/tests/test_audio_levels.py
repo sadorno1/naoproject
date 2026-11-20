@@ -3,6 +3,7 @@ from array import array
 import io
 from pathlib import Path
 import sys
+import struct
 import unittest
 from unittest.mock import Mock
 import wave
@@ -12,13 +13,13 @@ from audio_levels import boost_wav
 from speech import TTS
 
 
-def wav_bytes(values):
+def wav_bytes(values, channels=1):
     samples = array("h", values)
     if sys.byteorder != "little":
         samples.byteswap()
     out = io.BytesIO()
     with wave.open(out, "wb") as f:
-        f.setnchannels(1)
+        f.setnchannels(channels)
         f.setsampwidth(2)
         f.setframerate(24000)
         f.writeframes(samples.tobytes())
@@ -35,6 +36,30 @@ def read_wav(data):
 
 
 class AudioTests(unittest.TestCase):
+    def test_streamed_stereo_preserves_channels_and_actual_frame_count(self):
+        streamed = bytearray(wav_bytes([1000, -1000, 500, -500] * 50, channels=2))
+        struct.pack_into("<I", streamed, 4, 0xffffffff)
+        struct.pack_into("<I", streamed, 40, 0xffffffff)
+        params, samples = read_wav(boost_wav(bytes(streamed)))
+        self.assertEqual(params.nchannels, 2)
+        self.assertEqual(params.framerate, 24000)
+        self.assertEqual(params.nframes, 100)
+        self.assertEqual(len(samples), 200)
+
+    def test_streamed_wav_placeholder_lengths_are_replaced_with_actual_lengths(self):
+        #Streaming encoders can put UINT32_MAX in RIFF/data sizes until length is known.
+        for values in ([1000, -1000] * 100, [0] * 100, []):
+            with self.subTest(sample_count=len(values)):
+                streamed = bytearray(wav_bytes(values))
+                struct.pack_into("<I", streamed, 4, 0xffffffff)
+                struct.pack_into("<I", streamed, 40, 0xffffffff)
+                result = boost_wav(bytes(streamed))
+                params, samples = read_wav(result)
+                self.assertEqual(params.nframes, len(values))
+                self.assertEqual(len(samples), len(values))
+                self.assertEqual(struct.unpack_from("<I", result, 4)[0], len(result) - 8)
+                self.assertEqual(struct.unpack_from("<I", result, 40)[0], len(values) * 2)
+
     def test_quiet_speech_boost_is_capped_and_preserves_timing(self):
         original = wav_bytes([1000, -1000] * 100)
         params, values = read_wav(boost_wav(original))
@@ -66,7 +91,10 @@ class AudioTests(unittest.TestCase):
     def test_synthesis_adjusts_audio_before_returning(self):
         import tempfile
         client = Mock()
-        source = wav_bytes([1000, -1000] * 100)
+        source = bytearray(wav_bytes([1000, -1000] * 100))
+        struct.pack_into("<I", source, 4, 0xffffffff)
+        struct.pack_into("<I", source, 40, 0xffffffff)
+        source = bytes(source)
         response = client.audio.speech.with_streaming_response.create.return_value.__enter__ = Mock()
         #A context manager response that yields the WAV in separate chunks.
         stream = Mock()

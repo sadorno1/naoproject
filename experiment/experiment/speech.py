@@ -49,7 +49,7 @@ class TTS:
 
     #cache file name depends on everything that changes the audio
     def cache_path(self, text, cache_dir=config.AUDIO_CACHE_DIR):
-        levels = ("wav-gain-v1", self.normalize, self.target_rms_dbfs, self.peak_dbfs, self.max_gain_db)
+        levels = ("wav-gain-v2-finalized-header", self.normalize, self.target_rms_dbfs, self.peak_dbfs, self.max_gain_db)
         key = hashlib.sha256(f"{self.model}|{self.voice}|{self.format}|{levels}|{text}".encode("utf-8")).hexdigest()[:20]
         return os.path.join(cache_dir, f"{key}.{self.format}")
 

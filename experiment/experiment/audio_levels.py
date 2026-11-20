@@ -15,19 +15,23 @@ def boost_wav(data, target_rms_dbfs=-18.0, peak_dbfs=-1.0, max_gain_db=12.0):
         params = source.getparams()
         if source.getsampwidth() != 2 or source.getcomptype() != "NONE":
             raise ValueError("Speech loudness adjustment requires uncompressed 16-bit PCM WAV")
-        samples = array("h", source.readframes(source.getnframes()))
+        payload = source.readframes(source.getnframes())
+        if len(payload) % (params.nchannels * params.sampwidth):
+            raise ValueError("Speech WAV ends with an incomplete PCM frame")
+        samples = array("h", payload)
+        #Streamed WAV headers may advertise UINT32_MAX instead of the actual data size.
+        #Only the downloaded PCM frames determine the length of our finalized output.
+        params = params._replace(nframes=len(samples) // params.nchannels)
     if sys.byteorder != "little":
         samples.byteswap()
-    if not samples:
-        return data
-    peak = max(abs(v) for v in samples)
-    rms = math.sqrt(sum(v * v for v in samples) / len(samples))
+    peak = max((abs(v) for v in samples), default=0)
+    rms = math.sqrt(sum(v * v for v in samples) / len(samples)) if samples else 0
     #Do not amplify silence or near-silent noise below -60 dBFS.
-    if rms < 32768 * 10 ** (-60 / 20):
-        return data
-    gain = min(32767 * 10 ** (peak_dbfs / 20) / peak,
-               max(1.0, min(10 ** (max_gain_db / 20),
-                            32768 * 10 ** (target_rms_dbfs / 20) / rms)))
+    gain = 1.0
+    if rms >= 32768 * 10 ** (-60 / 20):
+        gain = min(32767 * 10 ** (peak_dbfs / 20) / peak,
+                   max(1.0, min(10 ** (max_gain_db / 20),
+                                32768 * 10 ** (target_rms_dbfs / 20) / rms)))
     adjusted = array("h", (max(-32768, min(32767, round(v * gain))) for v in samples))
     if sys.byteorder != "little":
         adjusted.byteswap()
