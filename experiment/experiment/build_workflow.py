@@ -42,6 +42,9 @@ class BuildWorkflow:
             if (not isinstance(names, list) or not names or not all(isinstance(n, str) and n for n in names)
                     or len(set(names)) != len(names)):
                 raise ValueError(f"{activity}: supply a nonempty ordered list of unique steps")
+            controls = spec.get("mode") == "controls"
+            if controls and (activity != "tutorial" or len(names) != 2):
+                raise ValueError("The controls tutorial must have two steps: talk practice then check practice")
             for index, name in enumerate(names):
                 step_dir = inside(folder, name)
                 data = read_json(step_dir / "step.json")
@@ -50,6 +53,16 @@ class BuildWorkflow:
                 hint = data.get("hint", "")
                 if not isinstance(hint, str):
                     raise ValueError(f"{activity}/{name}: hint must be text")
+                if controls:
+                    completion = data.get("completion")
+                    if completion != ("talk" if index == 0 else "check"):
+                        raise ValueError("Controls tutorial steps must complete on talk then check")
+                    self.steps.append(dict(activity=activity, title=title, step_id=name,
+                                           number=index + 1, count=len(names), instruction=instruction,
+                                           expected=expected, hint=hint.strip(), completion=completion,
+                                           reference_photo=None, capture=None, reference_sha256=None,
+                                           start_instruction=start if index == 0 else None))
+                    continue
                 if data.get("ready") is not True:
                     raise ValueError(f"Review the photo and set ready=true in {activity}/{name}/step.json")
                 photo = inside(step_dir, data.get("reference_photo", "reference.jpg"))
@@ -91,11 +104,18 @@ class BuildWorkflow:
     def announcement(self, include_start=True):
         step = self.current
         prefix = f"{step['title']}. {step['start_instruction']} " if include_start and step["start_instruction"] else ""
+        if step.get("completion"):
+            return prefix + f"Step {step['number']}. {step['instruction']}"
         return (prefix + f"Step {step['number']}. {step['instruction']} "
                 "When you are ready, move your hands away and press my left foot bumper to check.")
 
     def dialogue_context(self):
         step = self.current
+        if step.get("completion"):
+            return (f"[CURRENT STEP — controls tutorial]\nInstruction: {step['instruction']}\n"
+                    "This is a walkthrough of robot controls, not a construction task. "
+                    "Explain only the current control if asked. Do not ask them to place blocks or use "
+                    "a head sensor. The session verifies the practiced interaction and advances automatically.")
         return (f"[CURRENT STEP — controlled by the session]\nActivity: {step['title']}. "
                 f"Step {step['number']} of {step['count']}.\n"
                 f"Instruction: {step['instruction']}\nExpected state: {step['expected']}\n"

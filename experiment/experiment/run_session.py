@@ -316,6 +316,12 @@ class Session:
         matched = [p.pattern for p in self.identity_patterns if text and p.search(text)]
         if matched:
             self.log.event("identity_question", turn=self.turn, text=text, patterns=matched)
+        if (text and getattr(self, "workflow", None)
+                and self.workflow.current.get("completion") == "talk"):
+            step = self.workflow.current
+            self.log.event("tutorial_control_passed", step_id=step["step_id"], control="talk", source=source)
+            self._complete_current_step(step, timer)
+            return
         if not text:
             if config.EMPTY_TRANSCRIPT_MESSAGE is None:
                 self.log.event("empty_transcript_ignored", turn=self.turn)
@@ -458,6 +464,11 @@ class Session:
         timer = StageTimer(self.log, "check", n, t_start=t_press)
         timer.mark("bumper_press", t_press)
         self.log.event("check_start", check=n, key=key, activity=step["activity"], step_id=step["step_id"])
+        if step.get("completion") == "talk":
+            self._say_fixed("tutorial_reminder", "We'll practice checking next. First, hold my right foot bumper while you speak, then let go.")
+            timer.write(skipped="tutorial_talk_first")
+            self.inputs.finish_busy()
+            return
         try:
             self._say_fixed("look", self.fixed["look"][(n - 1) % len(self.fixed["look"])])
             self.inputs.set_state(CHECKING)
@@ -470,13 +481,17 @@ class Session:
             path = self.log.image_path(n)
             method = self._capture(path)
             current = self.vision.preprocess_image(path)
-            reference = self.vision.preprocess_image(step["reference_photo"])
-            #Fail closed if a reference is edited during the session.
-            if sha256_file(step["reference_photo"]) != step["reference_sha256"]:
-                raise RuntimeError("Reference changed; restart the session to load the updated workflow")
             with open(self.log.image_path(n, "_sent"), "wb") as f:
                 f.write(current)
-            result, info = compare_step(self.client, current, reference, step["expected"])
+            if step.get("completion") == "check":
+                result = {"verdict": "yes", "reason": "Check control practiced and photo captured; no build correctness evaluated."}
+                info = {"mode": "controls_tutorial"}
+            else:
+                reference = self.vision.preprocess_image(step["reference_photo"])
+                #Fail closed if a reference is edited during the session.
+                if sha256_file(step["reference_photo"]) != step["reference_sha256"]:
+                    raise RuntimeError("Reference changed; restart the session to load the updated workflow")
+                result, info = compare_step(self.client, current, reference, step["expected"])
             self.log.event("step_check_result", check=n, activity=step["activity"], step_id=step["step_id"],
                            result=result, vision=info, image=path, capture_method=method,
                            reference_sha256=step["reference_sha256"])
@@ -489,23 +504,29 @@ class Session:
         timer.mark("vision_done")
         verdict = result["verdict"]
         if verdict == "yes":
-            last_in_activity = step["number"] == step["count"]
-            finished = self.workflow.advance(verdict)
-            if finished:
-                self._say_workflow_feedback(step, "session_complete")
-                timer.write()
-                self.end("workflow_complete", say_goodbye=False)
-                return
-            if last_in_activity:
-                self._say_workflow_feedback(step, "activity_complete", next_title=self.workflow.current["title"])
-            else:
-                self._say_workflow_feedback(step, "step_correct")
-            self._announce_step()
+            self._complete_current_step(step, timer)
+            return
         elif verdict == "no":
             self._say_workflow_feedback(step, "retry", reason=result["reason"])
             self._say_fixed("step_instruction", self.workflow.announcement(include_start=False))
         else:
             self._say_fixed("step_uncertain", "I can't see clearly enough to check. Move your hands away and press my left foot bumper to try again.")
+        timer.write()
+        self.inputs.finish_busy()
+
+    def _complete_current_step(self, step, timer):
+        last_in_activity = step["number"] == step["count"]
+        finished = self.workflow.advance("yes")
+        if finished:
+            self._say_workflow_feedback(step, "session_complete")
+            timer.write()
+            self.end("workflow_complete", say_goodbye=False)
+            return
+        if last_in_activity:
+            self._say_workflow_feedback(step, "activity_complete", next_title=self.workflow.current["title"])
+        else:
+            self._say_workflow_feedback(step, "step_correct")
+        self._announce_step()
         timer.write()
         self.inputs.finish_busy()
 

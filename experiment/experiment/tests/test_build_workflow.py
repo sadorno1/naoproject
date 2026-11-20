@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from PIL import Image
-from build_workflow import ACTIVITIES, BuildWorkflow
+from build_workflow import ACTIVITIES, BUILDS_DIR, BuildWorkflow
 from reference_capture import HeadCaptureTrigger, save_reference
 from run_session import Session
 from step_vision import compare_step
@@ -124,6 +124,61 @@ class WorkflowTests(unittest.TestCase):
         session.end = Mock()
         session.fixed = {"look": ["Checking."]}
         return session
+
+    def controls_session(self):
+        for relative in ("build.json", "step_01/step.json", "step_02/step.json"):
+            write(self.root / "tutorial" / relative,
+                  json.loads((BUILDS_DIR / "tutorial" / relative).read_text(encoding="utf-8")))
+        session = self.session()
+        session.turn = 1
+        session.identity_patterns = []
+        session._respond = Mock()
+        return session
+
+    def test_controls_tutorial_loads_without_photos_or_ready_flags(self):
+        flow = BuildWorkflow(BUILDS_DIR, only="tutorial")
+        self.assertEqual([s["completion"] for s in flow.steps], ["talk", "check"])
+        self.assertNotIn("press my left foot", flow.announcement())
+        self.assertIsNone(flow.current["reference_photo"])
+        self.assertNotIn("head", flow.announcement().lower())
+
+    def test_tutorial_understood_speech_advances_to_check_practice(self):
+        session = self.controls_session()
+        session._handle_participant_text("Hello", Mock(), source="speech", held_s=1.2)
+        self.assertEqual(session.workflow.current["completion"], "check")
+        session._respond.assert_not_called()
+        session._announce_step.assert_called_once()
+
+    def test_tutorial_empty_speech_does_not_advance(self):
+        session = self.controls_session()
+        session._handle_participant_text("", Mock(), source="speech", held_s=1.2)
+        self.assertEqual(session.workflow.index, 0)
+        session._announce_step.assert_not_called()
+
+    def test_tutorial_left_bumper_does_not_skip_talking_practice(self):
+        session = self.controls_session()
+        session._check(1.0, "LeftBumperPressed")
+        self.assertEqual(session.workflow.index, 0)
+        session._capture.assert_not_called()
+
+    def test_tutorial_check_uses_real_capture_without_model_comparison(self):
+        session = self.controls_session()
+        session.workflow.index = 1
+        with patch("step_vision.compare_step") as compare:
+            session._check(1.0, "LeftBumperPressed")
+        session._capture.assert_called_once()
+        compare.assert_not_called()
+        self.assertEqual(session.workflow.current["activity"], "build_1")
+        session._say_workflow_feedback.assert_called_once_with(
+            session.workflow.steps[1], "activity_complete", next_title="build_1")
+
+    def test_tutorial_capture_failure_keeps_check_practice(self):
+        session = self.controls_session()
+        session.workflow.index = 1
+        session._capture.side_effect = RuntimeError("Camera unavailable")
+        session._check(1.0, "LeftBumperPressed")
+        self.assertEqual(session.workflow.index, 1)
+        session._announce_step.assert_not_called()
 
     def test_yes_speaks_confirmation_and_next_instruction(self):
         session = self.session()

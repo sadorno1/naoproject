@@ -1,7 +1,9 @@
 {
-  "title": "Tutorial",
-  "start_instruction": "Clear the build area before starting this activity.",
+  "title": "Getting to know NAO",
+  "mode": "controls",
+  "start_instruction": "Let's practice talking and asking me to check. My right and left mean my own feet, so they are opposite yours when you face me.",
   "steps": [
-    "step_01"
+    "step_01",
+    "step_02"
   ]
 }

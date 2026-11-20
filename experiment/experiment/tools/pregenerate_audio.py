@@ -19,15 +19,17 @@ def main():
     lines = load_fixed_lines()
     texts = [lines["greeting"], *lines["look"], lines["goodbye"]]
     #Cache reviewed step instructions too; drafts must not prevent caching the basic phrases.
-    from build_workflow import BuildWorkflow
-    try:
-        workflow = BuildWorkflow()
-    except (ValueError, OSError) as e:
-        print(f"Step instructions not ready for caching: {e}")
-    else:
-        for i in range(len(workflow.steps)):
-            workflow.index = i
-            texts.append(workflow.announcement())
+    from build_workflow import ACTIVITIES, BuildWorkflow
+    for activity in ACTIVITIES:
+        try:
+            workflow = BuildWorkflow(only=activity)
+        except (ValueError, OSError) as e:
+            print(f"Instructions not ready for caching ({activity}): {e}")
+        else:
+            for i in range(len(workflow.steps)):
+                workflow.index = i
+                texts.append(workflow.announcement())
+    texts.append("We'll practice checking next. First, hold my right foot bumper while you speak, then let go.")
     texts.extend([
         "That's correct, nice work! Let's move on to the next step.",
         "Wonderful work, you've finished all the activities in this session! Thank you for building with me.",

@@ -1,6 +1,6 @@
 # Mega Bloks build guidance experiment (NAO)
 
-The NAO guides a tutorial and three builds using authored steps and robot reference photos. The participant holds the **right foot bumper** to talk and presses the **left foot bumper** for a check. A yes advances to the next authored step; no or uncertainty stays on the current step. See [the workflow guide](../../BUILD_WORKFLOW.md) for authoring, head-tap reference capture and the new default session commands. The initial steps are drafts until photos and instructions are supplied.
+The NAO starts with a two-step controls tutorial (practice right-foot talking, then left-foot checks), followed by three builds with authored steps and robot reference photos. The tutorial needs no photos and never asks the participant to use the head sensor. The participant holds the **right foot bumper** to talk and presses the **left foot bumper** for a check. A successful practice interaction advances the tutorial; a yes advances a build step. No or uncertainty stays on the current build step. See [the workflow guide](../../BUILD_WORKFLOW.md) for authoring, author-only head-tap reference capture and session commands. The three builds are drafts until photos and instructions are supplied; the controls tutorial can already be run alone with `--activity tutorial`.
 
 The older single-build setup details below are preserved for `--legacy-build` mode. Add `--legacy-build` to the old session examples when using the four-block demo. The new step-photo mode does not use the generated illustration or old target JSON.
 

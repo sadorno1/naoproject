@@ -4,7 +4,7 @@ A NAO robot guides a participant step by step through building a small structure
 
 The code is for a between-subjects study. Participants are told that the robot is controlled either by an **AI** or by a **human**. The robot's behavior is the same in both conditions: the same prompt, voice, gestures and timing. The condition label is only written to the session log.
 
-The default workflow is now **tutorial → build 1 → build 2 → build 3**, with an authored instruction, expected description and robot reference photo for each step. See [BUILD_WORKFLOW.md](BUILD_WORKFLOW.md) for the folder structure, head-tap photo capture and run commands. The step templates are intentionally blank until you supply the photos and instructions; new sessions will not start with unfinished steps.
+The default workflow is now **tutorial → build 1 → build 2 → build 3**. The tutorial is a ready-to-use walkthrough of right-foot talking and left-foot checks, with no head control or reference photos. The three builds use authored instructions, expected descriptions and robot reference photos for each step. See [BUILD_WORKFLOW.md](BUILD_WORKFLOW.md) for the folder structure, author-only head-tap photo capture and run commands. The three build templates are intentionally blank until you supply the photos and instructions; full sessions will not start with unfinished builds. You can run the controls tutorial alone with `--activity tutorial`.
 
 The earlier two-layer, four-block wall is retained with `--legacy-build`; see [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for that demo. Older single-build examples below need `--legacy-build` until the new workflow is authored.
 

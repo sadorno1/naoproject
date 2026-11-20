@@ -8,7 +8,7 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import config
-from build_workflow import ACTIVITIES, BUILDS_DIR
+from build_workflow import ACTIVITIES, BUILDS_DIR, read_json
 from nao_proxy import connect_robot, NaoProxy
 from reference_capture import HeadCaptureTrigger, capture_robot, save_reference
 from robot_link import RobotLink
@@ -24,6 +24,8 @@ def main(argv=None):
     folder = args.builds_dir / args.build
     if not (folder / "build.json").is_file():
         parser.error(f"Missing {folder / 'build.json'}")
+    if read_json(folder / "build.json").get("mode") == "controls":
+        parser.error("The controls tutorial needs no photos. Choose build_1, build_2 or build_3.")
     number = args.start_step if args.start_step is not None else 1
     if number < 1:
         parser.error("--start-step must be positive")

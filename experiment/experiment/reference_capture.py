@@ -64,6 +64,8 @@ def save_reference(root, activity, number, jpeg, capture_info, instruction=None,
     folder = Path(root) / activity
     spec_path = folder / "build.json"
     spec = read_json(spec_path)
+    if spec.get("mode") == "controls":
+        raise ValueError("The controls tutorial does not use reference photos; choose a build instead")
     if not isinstance(spec.get("steps"), list):
         raise ValueError("build.json must have a steps list")
     name = f"step_{number:02d}"
