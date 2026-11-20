@@ -94,6 +94,8 @@ Right-foot speech is for questions about the current step. Saying “done” doe
 
 ## Run when all activities are ready
 
+If your API key is not configured, run `python setup_keys.py` from the repository root first. Paste the key at the hidden prompt; the helper saves it locally in the Git-ignored `experiment/.env`. All OpenAI features use that same key.
+
 From `experiment/experiment`:
 
 ```bash

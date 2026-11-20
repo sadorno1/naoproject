@@ -17,7 +17,7 @@ pip install -r ../requirements.txt
 pip install -r requirements-local-stt.txt     # only for TRANSCRIBE_BACKEND = "faster-whisper"
 ```
 
-As in lab 3, the `.env` with `OPENAI_API_KEY=...` goes in the **parent** folder of `experiment/`.
+From the repository root, run `python setup_keys.py` and paste your OpenAI API key at the hidden prompt. It saves the key in `experiment/.env` (one folder above this code folder), which the session, photo evaluator, audio cache tool and model benchmark already load. From this folder you can run `python ../../setup_keys.py`. The helper preserves other settings and does not print or validate the key with OpenAI. The `.env` file is excluded from Git; never put your actual key in tracked code or `experiment/.env.example`. Restart running sessions after changing the key.
 
 ## Files
 

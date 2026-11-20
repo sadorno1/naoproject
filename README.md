@@ -82,11 +82,15 @@ pip install -r requirements.txt
 pip install -r experiment/experiment/requirements-local-stt.txt
 ```
 
-Create a file `experiment/.env` (the folder **above** the code folder) containing:
+From the repository root, run the key setup helper:
 
+```bash
+python setup_keys.py
 ```
-OPENAI_API_KEY=sk-...
-```
+
+Paste your OpenAI API key at the hidden prompt. This one key is used for dialogue, photo checks, speech generation and cloud transcription. The helper saves it to `experiment/.env`, preserves unrelated settings, and never prints the key. The file and temporary save files are ignored by Git; on Linux it is written with owner-only permissions. The key is stored as local text, not encrypted. Rerun the command to replace it; Enter without a key leaves the setup unchanged. No paid API request is made by setup, so it does not validate the key with OpenAI.
+
+Manual alternative: copy `experiment/.env.example` to `experiment/.env` and fill in `OPENAI_API_KEY` there. Do not put a real key in the example file. An `OPENAI_API_KEY` already exported in the terminal takes priority over this file; run `unset OPENAI_API_KEY` on Linux if you want to use the saved key instead. Restart a running session after changing the key.
 
 ### 3. One-time setup on the robot
 
