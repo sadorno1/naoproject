@@ -1,15 +1,18 @@
 # Tutorial and three builds
 
-The default session runs **tutorial → build 1 → build 2 → build 3**, in that order. The tutorial is a two-step controls walkthrough; each of the three builds can have as many photo-checked steps as you need. The old four-block demo remains available with `--legacy-build`.
+The default session runs **tutorial → build 1 → build 2 → build 3**, in that order. The tutorial combines a two-step controls walkthrough with a photo-checked mini build; each main build can also have as many photo-checked steps as you need. The old four-block demo remains available with `--legacy-build`.
 
 ## Participant tutorial
 
-The tutorial teaches how to use NAO, rather than asking the participant to build anything:
+The tutorial teaches how to use NAO, then lets the participant practice those controls on a mini build:
 
 1. **Practice talking.** NAO explains its own left/right foot sides, the green recording eyes, and holding the right bumper while speaking, then releasing it. The participant says hello. An understandable recording completes this practice step. Empty/unrecognized speech stays here, and pressing the left bumper early gives a reminder rather than skipping ahead.
-2. **Practice asking for a check.** NAO explains pressing the left bumper once, and clearing hands from the build area. A successful practice photo completes the tutorial; there is no target photo or build-correctness judgment at this stage. A capture failure asks for another try.
+2. **Practice asking for a check.** NAO explains pressing the left bumper once, and clearing hands from the build area. A successful practice photo completes this control exercise; there is no target photo or build-correctness judgment yet. A capture failure asks for another try.
+3. **Practice a mini build.** Starting at `step_03`, NAO gives your authored placement instructions. Each step compares the participant's photo against your reference and expected description, just like the main builds. A correct check advances; an incorrect check gives a hint and repeats the instruction; uncertainty asks for another photo. Saying “done” does not pass a placement.
 
-NAO encourages the participant after the talking practice, celebrates finishing the tutorial, then introduces build 1. The tutorial's `step.json` files contain editable spoken instructions and `completion` values (`talk`, then `check`). They need no photos or `ready` flags. You can run the tutorial alone with `--activity tutorial`, even while all three builds are still drafts. In dry run, a typed sentence simulates speech and `/check /path/to/photo.jpg` simulates the practice camera capture.
+NAO encourages the participant during practice, then celebrates finishing the tutorial only after the mini build's final photo passes. It then introduces build 1. The tutorial uses `mode: "controls_and_build"`: the first two `step.json` files have editable spoken instructions and `completion` values (`talk`, then `check`), with no photos or `ready` flags. All later tutorial steps are photo-checked placements and require instructions, expected descriptions, approved reference photos and `ready: true`. Two draft mini-build slots (`step_03` and `step_04`) are provided. Add/remove placement steps in the tutorial's ordered `steps` list as needed, keeping at least one after the two controls. `mini_build_intro` supplies the transition into the mini build.
+
+You can run the tutorial alone with `--activity tutorial` once its mini build is authored, even while all three main builds are still drafts. In dry run, a typed sentence simulates speech and `/check /path/to/photo.jpg` simulates the camera capture or checks the current mini-build placement.
 
 **The participant tutorial and final session do not use the head sensor.** Head tapping is an author-only reference-capture tool, run separately before the participant session. Do not run that tool alongside the final session.
 
@@ -23,6 +26,12 @@ experiment/experiment/builds/
       step.json           # right-bumper talking practice
     step_02/
       step.json           # left-bumper check practice
+    step_03/
+      step.json           # first mini-build placement, draft
+      reference.jpg       # capture with the authoring tool
+    step_04/
+      step.json           # second mini-build placement, draft
+      reference.jpg
   build_1/
     build.json
     step_01/step.json
@@ -34,7 +43,7 @@ experiment/experiment/builds/
     step_01/step.json
 ```
 
-The tutorial is supplied with controls instructions. The three builds start with a blank, unapproved first step. No build designs or expected photos have been invented. You supply those photos and expected states. A full session refuses to start until all three builds have reviewed steps, nonempty instructions, expected descriptions, and readable reference photos. Captured build steps store `reference.jpg` and `capture.json` beside their `step.json`.
+The tutorial is supplied with controls instructions and two draft mini-build placement slots. The three main builds start with a blank, unapproved first step. No build designs or expected photos have been invented. You supply those photos and expected states. A full session refuses to start until the tutorial mini build and all three main builds have reviewed photo steps, nonempty instructions, expected descriptions, and readable reference photos. Captured photo steps store `reference.jpg` and `capture.json` beside their `step.json`.
 
 `build.json` contains a title, a spoken `start_instruction` (such as clearing the build area), and the ordered `steps` list. Every listed step is required. The tool appends newly captured steps to this list in numeric order. Edit the list if you want a different order or remove an unused step. Do not remove a step whose placement is required by a later reference unless you also update the instructions.
 
@@ -57,9 +66,10 @@ python tools/capture_build_steps.py ROBOT_IP --build build_1
 
 Each photo must show the **entire cumulative build so far**, not just the new loose piece. The photograph is used as the expected state for that exact step. Capture the reset/empty state too if you want a separate step that verifies an empty area at the start of each activity.
 
-Capture each build separately (the tutorial needs no photos):
+Capture each build separately. The tutorial command automatically skips the first two control exercises and starts at `step_03`:
 
 ```bash
+python tools/capture_build_steps.py ROBOT_IP --build tutorial
 python tools/capture_build_steps.py ROBOT_IP --build build_1
 python tools/capture_build_steps.py ROBOT_IP --build build_2
 python tools/capture_build_steps.py ROBOT_IP --build build_3
@@ -91,7 +101,7 @@ Open each saved photo and edit its neighboring `step.json`. For example (illustr
 
 ## How the check works
 
-During the three builds, the session speaks only the current authored instruction. A left-foot press takes a current photo. The vision request contains **only the current step's reference**, its expected description and the live photo. It no longer uses the generated four-block illustration or the old target JSON in this mode. The controls tutorial uses the practiced interactions described above instead of this comparison.
+During the tutorial mini build and the three main builds, the session speaks only the current authored instruction. A left-foot press takes a current photo. The vision request contains **only the current step's reference**, its expected description and the live photo. It no longer uses the generated four-block illustration or the old target JSON in this mode. Only the first two tutorial control exercises use practiced interactions instead of this comparison.
 
 - **Yes, mid-build:** The chatbot generates a brief, encouraging confirmation. The session advances once and speaks the next authored instruction.
 - **Yes, activity finished:** The chatbot celebrates finishing the tutorial or build, then invites the participant to the next named activity. The session announces that activity, its reset instruction and its first step. After the final build (or the final step of a single-activity rehearsal), it celebrates and ends without inventing another build.

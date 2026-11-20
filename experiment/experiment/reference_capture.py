@@ -57,6 +57,11 @@ def capture_robot(nao, link, path):
     raise RuntimeError("Capture failed: " + "; ".join(errors))
 
 
+def is_control_step(root, activity, number):
+    path = Path(root) / activity / f"step_{number:02d}" / "step.json"
+    return path.exists() and read_json(path).get("completion") in ("talk", "check")
+
+
 def save_reference(root, activity, number, jpeg, capture_info, instruction=None, expected=None):
     """Never overwrite a reference. New steps remain drafts until manually reviewed."""
     if activity not in ACTIVITIES or number < 1:
@@ -66,6 +71,8 @@ def save_reference(root, activity, number, jpeg, capture_info, instruction=None,
     spec = read_json(spec_path)
     if spec.get("mode") == "controls":
         raise ValueError("The controls tutorial does not use reference photos; choose a build instead")
+    if is_control_step(root, activity, number):
+        raise ValueError("This step practices a control; capture the tutorial mini-build starting at step 3")
     if not isinstance(spec.get("steps"), list):
         raise ValueError("build.json must have a steps list")
     name = f"step_{number:02d}"

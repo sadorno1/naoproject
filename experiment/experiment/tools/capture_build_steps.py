@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import config
 from build_workflow import ACTIVITIES, BUILDS_DIR, read_json
 from nao_proxy import connect_robot, NaoProxy
-from reference_capture import HeadCaptureTrigger, capture_robot, save_reference
+from reference_capture import HeadCaptureTrigger, capture_robot, save_reference, is_control_step
 from robot_link import RobotLink
 
 
@@ -30,8 +30,11 @@ def main(argv=None):
     if number < 1:
         parser.error("--start-step must be positive")
     if args.start_step is None:
-        while (folder / f"step_{number:02d}" / "reference.jpg").exists():
+        while (is_control_step(args.builds_dir, args.build, number)
+               or (folder / f"step_{number:02d}" / "reference.jpg").exists()):
             number += 1
+    if is_control_step(args.builds_dir, args.build, number):
+        parser.error("That step practices a control, not a build. Use --start-step 3 for the tutorial mini-build.")
     if (folder / f"step_{number:02d}" / "reference.jpg").exists():
         parser.error("That step already has a photo. Move the old photo aside explicitly before retaking it.")
     session = connect_robot(args.robot_ip)
@@ -67,7 +70,8 @@ def main(argv=None):
                 photo = save_reference(args.builds_dir, args.build, number, scratch.read_bytes(), metadata)
                 print(f"Saved {photo}. Review it; fill instruction/expected and set ready=true in step.json.")
                 number += 1
-                while (folder / f"step_{number:02d}" / "reference.jpg").exists():
+                while (is_control_step(args.builds_dir, args.build, number)
+                       or (folder / f"step_{number:02d}" / "reference.jpg").exists()):
                     number += 1
                 print(f"Next photo: {args.build}/step_{number:02d}/reference.jpg")
             except Exception as e:

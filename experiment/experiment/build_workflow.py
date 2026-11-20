@@ -42,9 +42,16 @@ class BuildWorkflow:
             if (not isinstance(names, list) or not names or not all(isinstance(n, str) and n for n in names)
                     or len(set(names)) != len(names)):
                 raise ValueError(f"{activity}: supply a nonempty ordered list of unique steps")
-            controls = spec.get("mode") == "controls"
-            if controls and (activity != "tutorial" or len(names) != 2):
+            mode = spec.get("mode", "photos")
+            controls = mode in ("controls", "controls_and_build")
+            if mode not in ("photos", "controls", "controls_and_build"):
+                raise ValueError(f"Unknown activity mode: {mode}")
+            if controls and activity != "tutorial":
+                raise ValueError("Control practice is only supported in the tutorial")
+            if mode == "controls" and len(names) != 2:
                 raise ValueError("The controls tutorial must have two steps: talk practice then check practice")
+            if mode == "controls_and_build" and len(names) < 3:
+                raise ValueError("The tutorial needs talk practice, check practice and at least one mini-build step")
             for index, name in enumerate(names):
                 step_dir = inside(folder, name)
                 data = read_json(step_dir / "step.json")
@@ -53,7 +60,7 @@ class BuildWorkflow:
                 hint = data.get("hint", "")
                 if not isinstance(hint, str):
                     raise ValueError(f"{activity}/{name}: hint must be text")
-                if controls:
+                if controls and index < 2:
                     completion = data.get("completion")
                     if completion != ("talk" if index == 0 else "check"):
                         raise ValueError("Controls tutorial steps must complete on talk then check")
@@ -63,6 +70,8 @@ class BuildWorkflow:
                                            reference_photo=None, capture=None, reference_sha256=None,
                                            start_instruction=start if index == 0 else None))
                     continue
+                if data.get("completion"):
+                    raise ValueError(f"{activity}/{name}: mini-build and main build steps must be photo checked")
                 if data.get("ready") is not True:
                     raise ValueError(f"Review the photo and set ready=true in {activity}/{name}/step.json")
                 photo = inside(step_dir, data.get("reference_photo", "reference.jpg"))
@@ -80,7 +89,9 @@ class BuildWorkflow:
                                        number=index + 1, count=len(names), instruction=instruction,
                                        expected=expected, reference_photo=str(photo), capture=capture,
                                        hint=hint.strip(),
-                                       start_instruction=start if index == 0 else None,
+                                       start_instruction=(start if index == 0 else
+                                           required_text(spec.get("mini_build_intro"), "tutorial mini_build_intro")
+                                           if mode == "controls_and_build" and index == 2 else None),
                                        reference_sha256=hashlib.sha256(photo.read_bytes()).hexdigest()))
         self.index = 0
 
