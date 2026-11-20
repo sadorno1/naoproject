@@ -432,6 +432,24 @@ class Session:
         self.dialogue = DialogueModel(self.client, workflow_system_prompt())
         self._say_fixed("step_instruction", self.workflow.announcement())
 
+    def _say_workflow_feedback(self, step, kind, reason="", next_title=None):
+        from workflow_feedback import generate_feedback
+        fallbacks = {
+            "step_correct": "That's correct, nice work! Let's move on to the next step.",
+            "activity_complete": f"You finished {step['title']}, great work! Let's start {next_title}.",
+            "session_complete": "Wonderful work, you've finished all the activities in this session! Thank you for building with me.",
+            "retry": "Not quite yet. " + (step.get("hint") or "Let's check the placement against the instruction and try again."),
+        }
+        try:
+            text = generate_feedback(self.client, step, kind, reason, next_title)
+            fallback = False
+        except Exception as e:
+            self.log.event("feedback_error", kind=kind, error=repr(e))
+            text, fallback = fallbacks[kind], True
+        self.log.event("workflow_feedback", activity=step["activity"], step_id=step["step_id"],
+                       kind=kind, text=text, fallback=fallback, model=config.LLM_MODEL)
+        self._say_fixed("workflow_" + kind, text)
+
     def _check_step(self, t_press, key):
         from step_vision import compare_step
         self.checks += 1
@@ -471,17 +489,21 @@ class Session:
         timer.mark("vision_done")
         verdict = result["verdict"]
         if verdict == "yes":
+            last_in_activity = step["number"] == step["count"]
             finished = self.workflow.advance(verdict)
             if finished:
-                self._say_fixed("step_yes", "Yes, that's correct! We're all done.")
+                self._say_workflow_feedback(step, "session_complete")
                 timer.write()
                 self.end("workflow_complete", say_goodbye=False)
                 return
-            self._say_fixed("step_yes", "Yes, that's correct! Okay, next step.")
+            if last_in_activity:
+                self._say_workflow_feedback(step, "activity_complete", next_title=self.workflow.current["title"])
+            else:
+                self._say_workflow_feedback(step, "step_correct")
             self._announce_step()
         elif verdict == "no":
-            self._say_fixed("step_no", "No, not quite yet. Let's try this step again.")
-            self._say_fixed("step_instruction", self.workflow.announcement())
+            self._say_workflow_feedback(step, "retry", reason=result["reason"])
+            self._say_fixed("step_instruction", self.workflow.announcement(include_start=False))
         else:
             self._say_fixed("step_uncertain", "I can't see clearly enough to check. Move your hands away and press my left foot bumper to try again.")
         timer.write()

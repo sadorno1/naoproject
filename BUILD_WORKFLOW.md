@@ -72,23 +72,25 @@ Open each saved photo and edit its neighboring `step.json`. For example (illustr
 {
   "instruction": "Place one red block across the two studs nearest me on the light-blue base.",
   "expected": "One light-blue 2x2 base on the table. One red 1x2 attached across the row nearest NAO; the other row of light-blue studs remains exposed. No other blocks in the build area.",
+  "hint": "Check which row of the light-blue base the red block is attached to.",
   "reference_photo": "reference.jpg",
   "ready": true
 }
 ```
 
-`instruction` is spoken directly by NAO, so write it from NAO to the participant. `expected` explains the complete state in the photo, including what matters for checking colors, counts, orientations and placements. Add those details where a photo alone could be ambiguous. Set `ready` to true only after reviewing the photo and both descriptions. You can provide these files/photos and instructions in a later change; the scaffolding is deliberately unfinished until then.
+`instruction` is spoken directly by NAO, so write it from NAO to the participant. `expected` explains the complete state in the photo, including what matters for checking colors, counts, orientations and placements. Add those details where a photo alone could be ambiguous. The optional `hint` supplies a preferred hint after an incorrect check; without one, the chatbot uses the expected state and observed mismatch to suggest a brief hint. Set `ready` to true only after reviewing the photo and descriptions. You can provide these files/photos and instructions in a later change; the scaffolding is deliberately unfinished until then.
 
 ## How the check works
 
 The session speaks only the current authored instruction. A left-foot press takes a current photo. The vision request contains **only the current step's reference**, its expected description and the live photo. It no longer uses the generated four-block illustration or the old target JSON in this mode.
 
-- **Yes:** “Yes, that's correct! Okay, next step.” The session advances once and speaks the next authored instruction. At an activity boundary, it announces the next activity and its reset instruction. At the final step it says, “Yes, that's correct! We're all done.”
-- **No:** “No, not quite yet. Let's try this step again.” It repeats the current instruction and stays on that step.
+- **Yes, mid-build:** The chatbot generates a brief, encouraging confirmation. The session advances once and speaks the next authored instruction.
+- **Yes, activity finished:** The chatbot celebrates finishing the tutorial or build, then invites the participant to the next named activity. The session announces that activity, its reset instruction and its first step. After the final build (or the final step of a single-activity rehearsal), it celebrates and ends without inventing another build.
+- **No:** The chatbot gently offers a short hint grounded in the authored hint or the expected state and observed mismatch. NAO then repeats the exact current instruction and stays on that step. It does not repeat the activity's reset/clear instruction during a retry.
 - **Uncertain:** It asks for hands to be cleared and another check. The step stays unchanged. Hidden parts are not assumed correct.
 - **Capture/API/invalid-response error:** It asks to retry without advancing.
 
-Right-foot speech is for questions about the current step. Saying “done” does not advance the workflow. Dialogue history is reset at each new step, and the current instruction is attached to questions. Step instructions and verdicts are spoken directly from code rather than rewritten by the dialogue model. Their audio is generated through the existing TTS pipeline.
+Right-foot speech is for questions about the current step. Saying “done” does not advance the workflow. Dialogue history is reset at each new step, and the current instruction is attached to questions. The chatbot chooses social feedback and hints, but code controls progression and speaks the exact authored instructions. Feedback is limited to one or two short sentences; its prompt forbids invented placements and future steps. If feedback generation fails, a fallback confirmation or hint is used. An additional text-generation request is made per correct/incorrect check. Feedback text, its type and fallback status are logged. All speech uses the existing TTS pipeline. Live wording and hint usefulness still need rehearsal.
 
 ## Run when all activities are ready
 

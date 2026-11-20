@@ -23,7 +23,7 @@ The earlier two-layer, four-block wall is retained with `--legacy-build`; see [M
 **Checking the build**
 1. The participant presses a **left foot bumper**. The robot says "let me take a look" and takes a photo with its head camera.
 2. A vision model compares the live photo with the current step's robot reference photo and your expected-state description, returning yes, no or uncertain.
-3. On yes, code says “Yes, that's correct! Okay, next step,” advances once, and speaks the next authored instruction. No, uncertainty and failed checks keep the current step.
+3. On yes, the chatbot offers encouragement, code advances once, and NAO speaks the next authored instruction. Completing an activity gets a celebration and an invitation to the next build. On no, NAO gives a short hint and repeats the current instruction. No, uncertainty and failed checks keep the current step.
 4. After the tutorial and all three builds pass their final checks, the session ends. The old coordinate-based checker is used only with `--legacy-build`.
 
 **Logging:** Every session writes a timestamped event log (`.jsonl`) with transcripts, robot utterances, gestures, sensor presses, build-check results, per-stage latencies and completion time. The log also stores hashes of the prompt files, which confirm that both conditions used identical prompts.

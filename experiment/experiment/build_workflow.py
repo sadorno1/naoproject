@@ -47,6 +47,9 @@ class BuildWorkflow:
                 data = read_json(step_dir / "step.json")
                 instruction = required_text(data.get("instruction"), f"{activity}/{name} instruction")
                 expected = required_text(data.get("expected"), f"{activity}/{name} expected")
+                hint = data.get("hint", "")
+                if not isinstance(hint, str):
+                    raise ValueError(f"{activity}/{name}: hint must be text")
                 if data.get("ready") is not True:
                     raise ValueError(f"Review the photo and set ready=true in {activity}/{name}/step.json")
                 photo = inside(step_dir, data.get("reference_photo", "reference.jpg"))
@@ -63,6 +66,7 @@ class BuildWorkflow:
                 self.steps.append(dict(activity=activity, title=title, step_id=name,
                                        number=index + 1, count=len(names), instruction=instruction,
                                        expected=expected, reference_photo=str(photo), capture=capture,
+                                       hint=hint.strip(),
                                        start_instruction=start if index == 0 else None,
                                        reference_sha256=hashlib.sha256(photo.read_bytes()).hexdigest()))
         self.index = 0
@@ -84,9 +88,9 @@ class BuildWorkflow:
             self.index += 1
         return self.complete
 
-    def announcement(self):
+    def announcement(self, include_start=True):
         step = self.current
-        prefix = f"{step['title']}. {step['start_instruction']} " if step["start_instruction"] else ""
+        prefix = f"{step['title']}. {step['start_instruction']} " if include_start and step["start_instruction"] else ""
         return (prefix + f"Step {step['number']}. {step['instruction']} "
                 "When you are ready, move your hands away and press my left foot bumper to check.")
 

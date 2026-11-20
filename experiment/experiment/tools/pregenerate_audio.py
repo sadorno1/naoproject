@@ -29,9 +29,8 @@ def main():
             workflow.index = i
             texts.append(workflow.announcement())
     texts.extend([
-        "Yes, that's correct! Okay, next step.",
-        "Yes, that's correct! We're all done.",
-        "No, not quite yet. Let's try this step again.",
+        "That's correct, nice work! Let's move on to the next step.",
+        "Wonderful work, you've finished all the activities in this session! Thank you for building with me.",
         "I can't see clearly enough to check. Move your hands away and press my left foot bumper to try again.",
         "I couldn't check that photo. Please clear the view and press my left foot bumper to try again.",
     ])

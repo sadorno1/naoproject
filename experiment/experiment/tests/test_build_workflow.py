@@ -120,6 +120,7 @@ class WorkflowTests(unittest.TestCase):
         session._capture = Mock(return_value="dry_run_file")
         session._say_fixed = Mock()
         session._announce_step = Mock()
+        session._say_workflow_feedback = Mock()
         session.end = Mock()
         session.fixed = {"look": ["Checking."]}
         return session
@@ -129,7 +130,7 @@ class WorkflowTests(unittest.TestCase):
         with patch("step_vision.compare_step", return_value=({"verdict": "yes", "reason": "Matches."}, {})):
             session._check(1.0, "LeftBumperPressed")
         self.assertEqual(session.workflow.index, 1)
-        session._say_fixed.assert_any_call("step_yes", "Yes, that's correct! Okay, next step.")
+        session._say_workflow_feedback.assert_called_once_with(session.workflow.steps[0], "step_correct")
         session._announce_step.assert_called_once()
         session.end.assert_not_called()
 
@@ -141,6 +142,39 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(session.workflow.index, 0)
             session._announce_step.assert_not_called()
             session.end.assert_not_called()
+            if verdict == "no":
+                session._say_workflow_feedback.assert_called_once_with(
+                    session.workflow.current, "retry", reason="Not verified.")
+                instruction = session._say_fixed.call_args_list[-1].args[1]
+                self.assertIn("Place block 1.", instruction)
+                self.assertNotIn("Clear the area", instruction)
+            else:
+                session._say_workflow_feedback.assert_not_called()
+
+    def test_activity_end_celebrates_before_announcing_next_build(self):
+        session = self.session()
+        session.workflow.index = 1
+        events = []
+        session._say_workflow_feedback.side_effect = lambda *a, **kw: events.append(("feedback", a, kw))
+        session._announce_step.side_effect = lambda: events.append(("announce",))
+        with patch("step_vision.compare_step", return_value=({"verdict": "yes", "reason": "Matches."}, {})):
+            session._check(1.0, "LeftBumperPressed")
+        self.assertEqual(events[0][1][1], "activity_complete")
+        self.assertEqual(events[0][2]["next_title"], "build_1")
+        self.assertEqual(events[1], ("announce",))
+        self.assertEqual(session.workflow.current["activity"], "build_1")
+
+    def test_feedback_api_failure_uses_fallback(self):
+        session = self.session()
+        with patch("workflow_feedback.generate_feedback", side_effect=RuntimeError("Offline")):
+            Session._say_workflow_feedback(session, session.workflow.current, "step_correct")
+        session._say_fixed.assert_called_once_with("workflow_step_correct", "That's correct, nice work! Let's move on to the next step.")
+
+    def test_generated_feedback_is_spoken_as_returned(self):
+        session = self.session()
+        with patch("workflow_feedback.generate_feedback", return_value="You got it! Great building."):
+            Session._say_workflow_feedback(session, session.workflow.current, "step_correct")
+        session._say_fixed.assert_called_once_with("workflow_step_correct", "You got it! Great building.")
 
     def test_api_failure_does_not_advance(self):
         session = self.session()
@@ -164,6 +198,7 @@ class WorkflowTests(unittest.TestCase):
             session._check(1.0, "LeftBumperPressed")
         session.end.assert_called_once_with("workflow_complete", say_goodbye=False)
         session._announce_step.assert_not_called()
+        session._say_workflow_feedback.assert_called_once_with(session.workflow.steps[-1], "session_complete")
 
 
 class CaptureTriggerTests(unittest.TestCase):
