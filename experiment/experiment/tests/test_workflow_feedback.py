@@ -28,7 +28,13 @@ class FeedbackTests(unittest.TestCase):
         generate_feedback(self.client, self.step, "activity_complete", next_title="Build 2")
         messages = self.client.chat.completions.create.call_args.kwargs["messages"]
         self.assertIn("Celebrate completing this entire activity", messages[0]["content"])
-        self.assertEqual(json.loads(messages[1]["content"])["next_activity"], "Build 2")
+        self.assertEqual(json.loads(messages[1]["content"])["next_activity"], "the next build")
+
+    def test_praise_is_short_and_internal_labels_are_rejected(self):
+        for speech in ("You did a really very great job!", "Great, Step 5!", "Build 1 is done!"):
+            self.client.chat.completions.create.return_value.choices[0].message.content = json.dumps({"speech": speech})
+            with self.assertRaises(ValueError):
+                generate_feedback(self.client, self.step, "step_correct")
 
     def test_final_celebration_does_not_invite_nonexistent_build(self):
         generate_feedback(self.client, self.step, "session_complete")

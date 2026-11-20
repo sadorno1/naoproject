@@ -450,9 +450,9 @@ class Session:
     def _say_workflow_feedback(self, step, kind, reason="", next_title=None):
         from workflow_feedback import generate_feedback
         fallbacks = {
-            "step_correct": "That's correct, nice work! Let's move on to the next step.",
-            "activity_complete": f"You finished {step['title']}, great work! Let's start {next_title}.",
-            "session_complete": "Wonderful work, you've finished all the activities in this session! Thank you for building with me.",
+            "step_correct": "That's it, nice work!",
+            "activity_complete": "Nice work, you finished it! Ready to try the next build?",
+            "session_complete": "You did it! Thanks for building with me. That was fun!",
             "retry": "Not quite yet. " + (step.get("hint") or "Let's check the placement against the instruction and try again."),
         }
         try:
@@ -474,7 +474,7 @@ class Session:
         timer.mark("bumper_press", t_press)
         self.log.event("check_start", check=n, key=key, activity=step["activity"], step_id=step["step_id"])
         if step.get("completion") == "talk":
-            self._say_fixed("tutorial_reminder", "We'll practice checking next. First, hold my right foot bumper while you speak, then let go.")
+            self._say_fixed("tutorial_reminder", "We'll practice checking next. First, hold my left foot bumper while you speak, then let go.")
             timer.write(skipped="tutorial_talk_first")
             self.inputs.finish_busy()
             return
@@ -507,7 +507,7 @@ class Session:
         except Exception as e:
             self.log.event("check_error", check=n, activity=step["activity"], step_id=step["step_id"], error=repr(e))
             timer.write(error="step_check")
-            self._say_fixed("check_failed", "I couldn't check that photo. Please clear the view and press my left foot bumper to try again.")
+            self._say_fixed("check_failed", "I couldn't check that photo. Please clear the view and press my right foot bumper to try again.")
             self.inputs.finish_busy()
             return
         timer.mark("vision_done")
@@ -519,7 +519,7 @@ class Session:
             self._say_workflow_feedback(step, "retry", reason=result["reason"])
             self._say_fixed("step_instruction", self.workflow.announcement(include_start=False))
         else:
-            self._say_fixed("step_uncertain", "I can't see clearly enough to check. Move your hands away and press my left foot bumper to try again.")
+            self._say_fixed("step_uncertain", "I can't see clearly enough to check. Move your hands away and press my right foot bumper to try again.")
         timer.write()
         self.inputs.finish_busy()
 

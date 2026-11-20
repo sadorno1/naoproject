@@ -1,5 +1,5 @@
 {
-  "instruction": "Now press my left foot bumper once to practice asking for a check. During the builds, move your hands away first so I can see the blocks. Let's try pressing it now; you do not need to build anything yet.",
-  "expected": "The participant presses the left foot bumper and a camera photo is captured successfully. This practices requesting a check; no build is judged correct or incorrect.",
+  "instruction": "Now press my right bumper once. During builds, clear your hands first so I can see the blocks. No blocks needed yet.",
+  "expected": "The participant presses the right foot bumper and a camera photo is captured successfully. This practices requesting a check; no build is judged correct or incorrect.",
   "completion": "check"
 }

@@ -8,8 +8,8 @@ The current authored course has 19 steps and 17 reference images: tutorial contr
 
 The tutorial teaches how to use NAO, then lets the participant practice those controls on a mini build:
 
-1. **Practice talking.** NAO explains its own left/right foot sides, the green recording eyes, and holding the right bumper while speaking, then releasing it. The participant says hello. An understandable recording completes this practice step. Empty/unrecognized speech stays here, and pressing the left bumper early gives a reminder rather than skipping ahead.
-2. **Practice asking for a check.** NAO explains pressing the left bumper once, and clearing hands from the build area. A successful practice photo completes this control exercise; there is no target photo or build-correctness judgment yet. A capture failure asks for another try.
+1. **Practice talking.** NAO explains its own foot sides, the green recording eyes, and holding the left bumper while speaking, then releasing it. The participant says hello. An understandable recording completes this practice step. Empty/unrecognized speech stays here, and pressing the right bumper early gives a reminder rather than skipping ahead.
+2. **Practice asking for a check.** NAO explains pressing the right bumper once, and clearing hands from the build area. A successful practice photo completes this control exercise; there is no target photo or build-correctness judgment yet. A capture failure asks for another try.
 3. **Practice a mini build.** Starting at `step_03`, NAO gives your authored placement instructions. Each step compares the participant's photo against your reference and expected description, just like the main builds. A correct check advances; an incorrect check gives a hint and repeats the instruction; uncertainty asks for another photo. Saying “done” does not pass a placement.
 
 NAO encourages the participant during practice, then celebrates finishing the tutorial only after the mini build's final photo passes. It then introduces build 1. The tutorial uses `mode: "controls_and_build"`: the first two `step.json` files have editable spoken instructions and `completion` values (`talk`, then `check`), with no photos or `ready` flags. All later tutorial steps are photo-checked placements and require instructions, expected descriptions, approved reference photos and `ready: true`. Two draft mini-build slots (`step_03` and `step_04`) are provided. Add/remove placement steps in the tutorial's ordered `steps` list as needed, keeping at least one after the two controls. `mini_build_intro` supplies the transition into the mini build.
@@ -25,9 +25,9 @@ experiment/experiment/builds/
   tutorial/
     build.json
     step_01/
-      step.json           # right-bumper talking practice
+      step.json           # left-bumper talking practice
     step_02/
-      step.json           # left-bumper check practice
+      step.json           # right-bumper check practice
     step_03/
       step.json           # first mini-build placement, draft
       reference.jpg       # capture with the authoring tool
@@ -85,7 +85,7 @@ The tool resumes at the first step without a photo. It never overwrites an exist
 python tools/capture_build_steps.py ROBOT_IP --build build_1 --start-step 2
 ```
 
-After a retake it resumes with the next unsaved step. Every capture sets `ready` back to false for review. The head sensor takes photos **only in this separate tool**. In a participant session the head remains inactive; right foot = hold to talk/release to send, left foot = check. Foot sides are NAO's own sides, mirrored when facing it.
+After a retake it resumes with the next unsaved step. Every capture sets `ready` back to false for review. The head sensor takes photos **only in this separate tool**. In a participant session the head remains inactive; left foot = hold to talk/release to send, right foot = check. Foot sides are NAO's own sides, mirrored when facing it.
 
 ## Supply the expected instructions
 
@@ -105,7 +105,7 @@ Open each saved photo and edit its neighboring `step.json`. For example (illustr
 
 ## How the check works
 
-During the tutorial mini build and the three main builds, the session speaks only the current authored instruction. A left-foot press takes a current photo. The vision request contains **only the current step's reference**, its expected description and the live photo. It no longer uses the generated four-block illustration or the old target JSON in this mode. Only the first two tutorial control exercises use practiced interactions instead of this comparison.
+During the tutorial mini build and the three main builds, the session speaks only the current authored instruction. A right-foot press takes a current photo. The vision request contains **only the current step's reference**, its expected description and the live photo. It no longer uses the generated four-block illustration or the old target JSON in this mode. Only the first two tutorial control exercises use practiced interactions instead of this comparison.
 
 - **Yes, mid-build:** The chatbot generates a brief, encouraging confirmation. The session advances once and speaks the next authored instruction.
 - **Yes, activity finished:** The chatbot celebrates finishing the tutorial or build, then invites the participant to the next named activity. The session announces that activity, its reset instruction and its first step. After the final build (or the final step of a single-activity rehearsal), it celebrates and ends without inventing another build.
@@ -113,7 +113,7 @@ During the tutorial mini build and the three main builds, the session speaks onl
 - **Uncertain:** It asks for hands to be cleared and another check. The step stays unchanged. Hidden parts are not assumed correct.
 - **Capture/API/invalid-response error:** It asks to retry without advancing.
 
-During the three builds, right-foot speech is for questions about the current step; saying “done” does not advance a build. The tutorial's talking practice instead advances on an understandable recording, as described above. Dialogue history is reset at each new step, and the current instruction is attached to questions. The chatbot chooses social feedback and hints, but code controls progression and speaks the exact authored instructions. Feedback is limited to one or two short sentences; its prompt forbids invented placements and future steps. If feedback generation fails, a fallback confirmation or hint is used. An additional text-generation request is made per correct/incorrect check or successful tutorial practice. Feedback text, its type and fallback status are logged. All speech uses the existing TTS pipeline. Live wording and hint usefulness still need rehearsal.
+During the three builds, left-foot speech is for questions about the current step; saying “done” does not advance a build. The tutorial's talking practice instead advances on an understandable recording, as described above. Dialogue history is reset at each new step, and the current instruction is attached to questions. The chatbot chooses social feedback and hints, but code controls progression and speaks the exact authored instructions. Feedback is limited to one or two short sentences; its prompt forbids invented placements and future steps. If feedback generation fails, a fallback confirmation or hint is used. An additional text-generation request is made per correct/incorrect check or successful tutorial practice. Feedback text, its type and fallback status are logged. All speech uses the existing TTS pipeline. Live wording and hint usefulness still need rehearsal.
 
 ## Run when all activities are ready
 

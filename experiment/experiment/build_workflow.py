@@ -114,11 +114,10 @@ class BuildWorkflow:
 
     def announcement(self, include_start=True):
         step = self.current
-        prefix = f"{step['title']}. {step['start_instruction']} " if include_start and step["start_instruction"] else ""
+        prefix = f"{step['start_instruction']} " if include_start and step["start_instruction"] else ""
         if step.get("completion"):
-            return prefix + f"Step {step['number']}. {step['instruction']}"
-        return (prefix + f"Step {step['number']}. {step['instruction']} "
-                "When you are ready, move your hands away and press my left foot bumper to check.")
+            return prefix + step["instruction"]
+        return prefix + step["instruction"] + " Press my right bumper when you're ready for a check."
 
     def dialogue_context(self):
         step = self.current
@@ -127,11 +126,10 @@ class BuildWorkflow:
                     "This is a walkthrough of robot controls, not a construction task. "
                     "Explain only the current control if asked. Do not ask them to place blocks or use "
                     "a head sensor. The session verifies the practiced interaction and advances automatically.")
-        return (f"[CURRENT STEP — controlled by the session]\nActivity: {step['title']}. "
-                f"Step {step['number']} of {step['count']}.\n"
+        return ("[CURRENT PLACEMENT — controlled by the session]\n"
                 f"Instruction: {step['instruction']}\nExpected state: {step['expected']}\n"
                 "Answer only questions about this step. Do not advance, invent another placement, "
-                "or say the build is correct from the participant's words. Ask for a left-foot camera "
+                "or say the build is correct from the participant's words. Ask for a right-foot camera "
                 "check when they are ready. The reference describes the expected state, not what is visible now.")
 
 
@@ -139,10 +137,11 @@ def workflow_system_prompt():
     return ("You are NAO helping a participant build Mega Bloks from author-supplied steps. "
             "The session controls step progression and speaks the instructions and photo verdicts. "
             "You answer participant questions about the CURRENT STEP only, in one or two short sentences. "
+            "Sound relaxed and conversational. Never read out step numbers or activity titles; these are internal labels. "
             "Do not invent inventory, positions, steps, or visual observations. Do not declare yes/no or "
             "advance from a participant saying done. When unsure, repeat the supplied instruction or ask "
-            "for a left-foot camera check. Directions are the participant's view; do not reinterpret "
-            "directions supplied by the author. Right foot bumper is hold-to-talk, release-to-send. "
-            "Left foot bumper requests a check. Left/right foot names are NAO's own sides. "
+            "for a right-foot camera check. Directions are the participant's view; do not reinterpret "
+            "directions supplied by the author. Left foot bumper is hold-to-talk, release-to-send. "
+            "Right foot bumper requests a check. Foot names refer to NAO's own sides. "
             "Line 1 must be one expression from: " + ", ".join(config.EXPRESSIONS) +
             ". Remaining lines are only spoken words, without markdown.")

@@ -1,6 +1,6 @@
 {
   "_comment": "Shared session phrases; independent of legacy prompts and per-step build references.",
-  "greeting": "Hi, I'm Nao. I'm going to describe a Mega Bloks build to you one step at a time. Hold my right foot bumper while you talk to me, and let go when you're done. When you want me to check your build, press my left foot bumper.",
+  "greeting": "Hi, I'm Nao. Let's build together! Hold my left bumper to talk, then let go. Press my right bumper when you'd like me to check.",
   "look": [
     "Okay, let me take a look.",
     "Let me check that.",

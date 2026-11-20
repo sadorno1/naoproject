@@ -20,8 +20,8 @@ Tap and release the front head sensor for each photo. Press Ctrl+C to stop and c
 
 ## Controls in the participant session
 
-- Hold NAO's **right foot bumper** to talk; release to send. Eyes are green while recording.
-- Press NAO's **left foot bumper** to request a check.
+- Hold NAO's **left foot bumper** to talk; release to send. Eyes are green while recording.
+- Press NAO's **right foot bumper** to request a check.
 - NAO's head sensor is inactive. Head tapping is only used in the separate authoring tool.
 - Foot sides mean NAO's own sides, mirrored when facing it.
 - Press `q` in the terminal to end early.

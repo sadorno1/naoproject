@@ -1,5 +1,5 @@
 {
-  "instruction": "Hold my right foot bumper while you say hello, then let go when you finish. My eyes turn green while I listen. You can use this whenever you want to ask me a question.",
-  "expected": "The participant holds and releases the right foot bumper and an understandable recording is received. This practices talking, not block placement.",
+  "instruction": "Hold my left bumper, say hello, then let go. My eyes turn green while I'm listening. You can do this whenever you have a question.",
+  "expected": "The participant holds and releases the left foot bumper and an understandable recording is received. This practices talking, not block placement.",
   "completion": "talk"
 }

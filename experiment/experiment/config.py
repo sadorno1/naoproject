@@ -23,8 +23,8 @@ ROBOT_PHOTO_NAME = "check"
 #ALL sensor key names live here, because they differ between NAO versions.
 #verify them on your robot with tools/sensor_probe.py before the pilot
 #Left/right are NAO's own sides (mirrored for a participant facing NAO).
-TALK_SENSOR_KEY = "RightBumperPressed"
-CHECK_SENSOR_KEYS = ["LeftBumperPressed"]
+TALK_SENSOR_KEY = "LeftBumperPressed"
+CHECK_SENSOR_KEYS = ["RightBumperPressed"]
 
 #keys sensor_probe.py listens to, in addition to whatever ALMemory reports on this robot
 PROBE_SENSOR_KEYS = [

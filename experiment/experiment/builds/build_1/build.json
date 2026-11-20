@@ -1,6 +1,6 @@
 {
   "title": "Build 1",
-  "start_instruction": "Clear the build area before starting this activity. Lets start build 1!",
+  "start_instruction": "Let's clear some space and try a new build.",
   "steps": [
     "step_01",
     "step_02",

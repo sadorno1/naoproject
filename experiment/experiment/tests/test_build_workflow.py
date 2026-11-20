@@ -54,6 +54,17 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(len(flow.steps), 2)
         self.assertEqual(flow.current["activity"], "build_2")
 
+    def test_spoken_instruction_omits_internal_titles_and_numbers(self):
+        flow = BuildWorkflow(self.root)
+        announcement = flow.announcement()
+        self.assertNotIn("Step 1", announcement)
+        self.assertNotIn(flow.current["title"], announcement)
+        self.assertIn("Place block 1.", announcement)
+        self.assertIn("right bumper", announcement)
+        context = flow.dialogue_context()
+        self.assertNotIn("Step 1 of", context)
+        self.assertNotIn("Activity:", context)
+
     def test_draft_is_rejected_before_running(self):
         path = self.root / "tutorial/step_01/step.json"
         data = json.loads(path.read_text())
@@ -149,7 +160,7 @@ class WorkflowTests(unittest.TestCase):
     def test_tutorial_controls_need_no_photos_but_mini_build_does(self):
         flow = self.controls_session().workflow
         self.assertEqual([s["completion"] for s in flow.steps[:2]], ["talk", "check"])
-        self.assertNotIn("press my left foot", flow.announcement())
+        self.assertNotIn("press my right foot", flow.announcement())
         self.assertIsNone(flow.current["reference_photo"])
         self.assertNotIn("head", flow.announcement().lower())
         self.assertEqual(len([s for s in flow.steps if s["activity"] == "tutorial"]), 4)
@@ -177,9 +188,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(session.workflow.index, 0)
         session._announce_step.assert_not_called()
 
-    def test_tutorial_left_bumper_does_not_skip_talking_practice(self):
+    def test_tutorial_right_bumper_does_not_skip_talking_practice(self):
         session = self.controls_session()
-        session._check(1.0, "LeftBumperPressed")
+        session._check(1.0, "RightBumperPressed")
         self.assertEqual(session.workflow.index, 0)
         session._capture.assert_not_called()
 
@@ -187,7 +198,7 @@ class WorkflowTests(unittest.TestCase):
         session = self.controls_session()
         session.workflow.index = 1
         with patch("step_vision.compare_step") as compare:
-            session._check(1.0, "LeftBumperPressed")
+            session._check(1.0, "RightBumperPressed")
         session._capture.assert_called_once()
         compare.assert_not_called()
         self.assertEqual(session.workflow.current["activity"], "tutorial")
@@ -203,7 +214,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(session.workflow.index, 2)
         session._respond.assert_called_once()
         with patch("step_vision.compare_step", return_value=({"verdict": "no", "reason": "Incomplete."}, {})) as compare:
-            session._check(1.0, "LeftBumperPressed")
+            session._check(1.0, "RightBumperPressed")
         compare.assert_called_once()
         self.assertEqual(session.workflow.index, 2)
 
@@ -211,7 +222,7 @@ class WorkflowTests(unittest.TestCase):
         session = self.controls_session()
         session.workflow.index = 3
         with patch("step_vision.compare_step", return_value=({"verdict": "yes", "reason": "Matches."}, {})):
-            session._check(1.0, "LeftBumperPressed")
+            session._check(1.0, "RightBumperPressed")
         self.assertEqual(session.workflow.current["activity"], "build_1")
         session._say_workflow_feedback.assert_called_once_with(
             session.workflow.steps[3], "activity_complete", next_title="build_1")
@@ -228,14 +239,14 @@ class WorkflowTests(unittest.TestCase):
         session = self.controls_session()
         session.workflow.index = 1
         session._capture.side_effect = RuntimeError("Camera unavailable")
-        session._check(1.0, "LeftBumperPressed")
+        session._check(1.0, "RightBumperPressed")
         self.assertEqual(session.workflow.index, 1)
         session._announce_step.assert_not_called()
 
     def test_yes_speaks_confirmation_and_next_instruction(self):
         session = self.session()
         with patch("step_vision.compare_step", return_value=({"verdict": "yes", "reason": "Matches."}, {})):
-            session._check(1.0, "LeftBumperPressed")
+            session._check(1.0, "RightBumperPressed")
         self.assertEqual(session.workflow.index, 1)
         session._say_workflow_feedback.assert_called_once_with(session.workflow.steps[0], "step_correct")
         session._announce_step.assert_called_once()
@@ -245,7 +256,7 @@ class WorkflowTests(unittest.TestCase):
         for verdict in ("no", "uncertain"):
             session = self.session()
             with patch("step_vision.compare_step", return_value=({"verdict": verdict, "reason": "Not verified."}, {})):
-                session._check(1.0, "LeftBumperPressed")
+                session._check(1.0, "RightBumperPressed")
             self.assertEqual(session.workflow.index, 0)
             session._announce_step.assert_not_called()
             session.end.assert_not_called()
@@ -265,7 +276,7 @@ class WorkflowTests(unittest.TestCase):
         session._say_workflow_feedback.side_effect = lambda *a, **kw: events.append(("feedback", a, kw))
         session._announce_step.side_effect = lambda: events.append(("announce",))
         with patch("step_vision.compare_step", return_value=({"verdict": "yes", "reason": "Matches."}, {})):
-            session._check(1.0, "LeftBumperPressed")
+            session._check(1.0, "RightBumperPressed")
         self.assertEqual(events[0][1][1], "activity_complete")
         self.assertEqual(events[0][2]["next_title"], "build_1")
         self.assertEqual(events[1], ("announce",))
@@ -275,7 +286,7 @@ class WorkflowTests(unittest.TestCase):
         session = self.session()
         with patch("workflow_feedback.generate_feedback", side_effect=RuntimeError("Offline")):
             Session._say_workflow_feedback(session, session.workflow.current, "step_correct")
-        session._say_fixed.assert_called_once_with("workflow_step_correct", "That's correct, nice work! Let's move on to the next step.")
+        session._say_fixed.assert_called_once_with("workflow_step_correct", "That's it, nice work!")
 
     def test_generated_feedback_is_spoken_as_returned(self):
         session = self.session()
@@ -286,15 +297,15 @@ class WorkflowTests(unittest.TestCase):
     def test_api_failure_does_not_advance(self):
         session = self.session()
         with patch("step_vision.compare_step", side_effect=RuntimeError("Offline")):
-            session._check(1.0, "LeftBumperPressed")
+            session._check(1.0, "RightBumperPressed")
         self.assertEqual(session.workflow.index, 0)
-        session._say_fixed.assert_any_call("check_failed", "I couldn't check that photo. Please clear the view and press my left foot bumper to try again.")
+        session._say_fixed.assert_any_call("check_failed", "I couldn't check that photo. Please clear the view and press my right foot bumper to try again.")
 
     def test_changed_reference_does_not_call_model_or_advance(self):
         session = self.session()
         Path(session.workflow.current["reference_photo"]).write_bytes(b"changed")
         with patch("step_vision.compare_step") as compare:
-            session._check(1.0, "LeftBumperPressed")
+            session._check(1.0, "RightBumperPressed")
         compare.assert_not_called()
         self.assertEqual(session.workflow.index, 0)
 
@@ -302,7 +313,7 @@ class WorkflowTests(unittest.TestCase):
         session = self.session()
         session.workflow.index = len(session.workflow.steps) - 1
         with patch("step_vision.compare_step", return_value=({"verdict": "yes", "reason": "Matches."}, {})):
-            session._check(1.0, "LeftBumperPressed")
+            session._check(1.0, "RightBumperPressed")
         session.end.assert_called_once_with("workflow_complete", say_goodbye=False)
         session._announce_step.assert_not_called()
         session._say_workflow_feedback.assert_called_once_with(session.workflow.steps[-1], "session_complete")

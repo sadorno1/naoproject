@@ -127,38 +127,38 @@ class BumperControlTests(unittest.TestCase):
         nao.subscribe.side_effect = subscribe
         self.inputs.attach(nao)
 
-    def test_only_right_talk_and_left_check_are_subscribed(self):
-        self.assertEqual(set(self.callbacks), {"RightBumperPressed", "LeftBumperPressed"})
-        self.assertEqual(self.inputs.talk_key, "RightBumperPressed")
-        self.assertEqual(self.inputs.check_keys, ["LeftBumperPressed"])
+    def test_only_left_talk_and_right_check_are_subscribed(self):
+        self.assertEqual(set(self.callbacks), {"LeftBumperPressed", "RightBumperPressed"})
+        self.assertEqual(self.inputs.talk_key, "LeftBumperPressed")
+        self.assertEqual(self.inputs.check_keys, ["RightBumperPressed"])
 
-    def test_right_bumper_hold_and_release_records_without_camera_check(self):
-        self.callbacks["RightBumperPressed"](1.0)
+    def test_left_bumper_hold_and_release_records_without_camera_check(self):
+        self.callbacks["LeftBumperPressed"](1.0)
         self.assertEqual(self.inputs.state, RECORDING)
         self.assertEqual(self.inputs.events.get_nowait()[0], "talk_press")
-        self.callbacks["RightBumperPressed"](0.0)
+        self.callbacks["LeftBumperPressed"](0.0)
         self.assertEqual(self.inputs.state, PROCESSING)
         self.assertEqual(self.inputs.events.get_nowait()[0], "talk_release")
         self.assertTrue(self.inputs.events.empty())
 
-    def test_left_bumper_requests_only_one_check(self):
-        self.callbacks["LeftBumperPressed"](1.0)
+    def test_right_bumper_requests_only_one_check(self):
+        self.callbacks["RightBumperPressed"](1.0)
         event = self.inputs.events.get_nowait()
-        self.assertEqual((event[0], event[2]), ("check", "LeftBumperPressed"))
-        self.callbacks["LeftBumperPressed"](0.0)
+        self.assertEqual((event[0], event[2]), ("check", "RightBumperPressed"))
+        self.callbacks["RightBumperPressed"](0.0)
         self.assertTrue(self.inputs.events.empty())
 
-    def test_left_bumper_is_ignored_while_right_bumper_records(self):
-        self.callbacks["RightBumperPressed"](1.0)
-        self.inputs.events.get_nowait()
+    def test_right_bumper_is_ignored_while_left_bumper_records(self):
         self.callbacks["LeftBumperPressed"](1.0)
+        self.inputs.events.get_nowait()
+        self.callbacks["RightBumperPressed"](1.0)
         self.assertEqual(self.inputs.state, RECORDING)
         self.assertTrue(self.inputs.events.empty())
 
-    def test_right_bumper_is_ignored_while_speaking(self):
+    def test_left_bumper_is_ignored_while_speaking(self):
         self.inputs.set_state(SPEAKING)
-        self.callbacks["RightBumperPressed"](1.0)
-        self.callbacks["RightBumperPressed"](0.0)
+        self.callbacks["LeftBumperPressed"](1.0)
+        self.callbacks["LeftBumperPressed"](0.0)
         self.assertTrue(self.inputs.events.empty())
         self.assertEqual(self.inputs.state, SPEAKING)
 

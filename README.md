@@ -24,16 +24,16 @@ Photo-only mode needs no API key, participant ID or completed build setup. It do
 
 ```text
 Greeting
-  -> Practice talking with the right foot bumper
-  -> Practice requesting a check with the left foot bumper
+  -> Practice talking with the left foot bumper
+  -> Practice requesting a check with the right foot bumper
   -> Tutorial mini build, checked after each placement
   -> Celebrate finishing the tutorial
   -> Build 1 -> celebrate -> Build 2 -> celebrate -> Build 3
   -> Final celebration and session end
 ```
 
-1. **Talk practice:** hold NAO's right bumper, say hello, then release. Its eyes turn green during recording. Understandable speech advances the tutorial; an empty recording does not.
-2. **Check practice:** press NAO's left bumper once. A successful camera capture completes this exercise, without judging a build. Pressing it before completing talk practice gives a reminder.
+1. **Talk practice:** hold NAO's left bumper, say hello, then release. Its eyes turn green during recording. Understandable speech advances the tutorial; an empty recording does not.
+2. **Check practice:** press NAO's right bumper once. A successful camera capture completes this exercise, without judging a build. Pressing it before completing talk practice gives a reminder.
 3. **Tutorial mini build:** follow the three authored placements at `tutorial/step_03` through `step_05`. Each placement needs a successful photo comparison; change the number of placements in `tutorial/build.json` if needed.
 4. **Three main builds:** finish each build one checked step at a time. NAO celebrates completing an activity, introduces the next one, and gives its starting/reset instruction.
 
@@ -41,9 +41,9 @@ Greeting
 
 | Control | Action |
 |---|---|
-| Hold the **right foot bumper** | Record speech; eyes turn green |
-| Release the right bumper | Send the recording for transcription |
-| Press the **left foot bumper** | Request a camera check |
+| Hold the **left foot bumper** | Record speech; eyes turn green |
+| Release the left bumper | Send the recording for transcription |
+| Press the **right foot bumper** | Request a camera check |
 | Head sensor | Inactive during the participant session |
 | `q` in the terminal | Experimenter ends the session |
 
@@ -61,7 +61,9 @@ For the current step, the vision model receives your reference photo, your expec
 | Unclear photo | Ask for hands to be cleared and another check | Stay on the current step |
 | Capture/API failure | Ask to retry | Stay on the current step |
 
-The session controls progression in code. During construction, saying “done” does not pass a step. Right-bumper speech lets participants ask questions about the current instruction. Dialogue history resets at each new step. Hints use the expected state and observed mismatch, or your optional authored `hint`. Generated feedback has fallback wording if its text-generation request fails.
+The session controls progression in code. During construction, saying “done” does not pass a step. Left-bumper speech lets participants ask questions about the current instruction. Dialogue history resets at each new step. Hints use the expected state and observed mismatch, or your optional authored `hint`. Generated feedback has fallback wording if its text-generation request fails.
+
+Spoken instructions omit internal step numbers and activity titles. The greeting and transitions use conversational wording. Placement praise is capped at six words, celebrations at fifteen, and retry hints at twenty-five; longer or label-reading feedback falls back to a short prepared response. Step numbers and titles remain in the files/logs for tracking.
 
 The final successful check celebrates and ends the session. There is no additional build after build 3. The new workflow does not use the old generated top-view illustration or coordinate target JSON.
 
@@ -115,7 +117,7 @@ cd experiment/experiment
 python tools/sensor_probe.py ROBOT_IP
 ```
 
-Replace `ROBOT_IP` with NAO's IP address. Check right-bumper hold/release and left-bumper press events, then stop the sensor probe with Ctrl+C.
+Replace `ROBOT_IP` with NAO's IP address. Check left-bumper hold/release and right-bumper press events, then stop the sensor probe with Ctrl+C.
 
 ```bash
 python tools/camera_probe.py ROBOT_IP --set-head --camera 0 --out tmp/camera_top
