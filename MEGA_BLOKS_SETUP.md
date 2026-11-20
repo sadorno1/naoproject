@@ -1,5 +1,7 @@
 # Four-block demo
 
+This guide describes the earlier demo, now run with `--legacy-build`. The default tutorial-and-three-builds workflow and head-tap reference capture are documented in [BUILD_WORKFLOW.md](BUILD_WORKFLOW.md).
+
 Use exactly two light-blue 2x2 pieces and two red 1x2 pieces. Put the other pieces away, outside the camera view. Sizes count the large Mega Bloks studs.
 
 ## Shape and sketch
@@ -81,7 +83,7 @@ Use the existing Python environment and API key setup described in the README. N
 
 ```powershell
 python tools/pregenerate_audio.py
-python run_session.py --ip ROBOT_IP --pid P01 --condition ai
+python run_session.py --ip ROBOT_IP --pid P01 --condition ai --legacy-build
 ```
 
 Press NAO's left foot bumper to check the build. Vision still runs on demand, rather than continuously. Checks preserve more image detail, distinguish your two target footprints and the difference between light blue and blue, and ask for a clearer view if the frame is unclear or no blocks are seen. Uncertain extra blocks prevent a success result.

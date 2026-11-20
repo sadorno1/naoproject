@@ -1,6 +1,8 @@
 # Mega Bloks build guidance experiment (NAO)
 
-The NAO describes a target Mega Bloks structure step by step. The participant holds the **right foot bumper** to talk and presses a **left foot bumper** to request a build check. The robot photographs the build, a vision model turns the photo into structured JSON, code compares it to the target, and the robot phrases the result. A full match ends the session.
+The NAO guides a tutorial and three builds using authored steps and robot reference photos. The participant holds the **right foot bumper** to talk and presses the **left foot bumper** for a check. A yes advances to the next authored step; no or uncertainty stays on the current step. See [the workflow guide](../../BUILD_WORKFLOW.md) for authoring, head-tap reference capture and the new default session commands. The initial steps are drafts until photos and instructions are supplied.
+
+The older single-build setup details below are preserved for `--legacy-build` mode. Add `--legacy-build` to the old session examples when using the four-block demo. The new step-photo mode does not use the generated illustration or old target JSON.
 
 The condition (`ai` / `human`) is written **only** to the log. The prompt, voice, gestures and behavior are identical in both conditions, and each log records a SHA-256 of the system prompt so you can confirm this (`summarize_log.py` warns if the hashes differ).
 

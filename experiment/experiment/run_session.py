@@ -48,8 +48,6 @@ def config_snapshot():
 
 class Session:
     def __init__(self, args):
-        from dotenv import load_dotenv
-        from openai import OpenAI
         import vision
         from dialogue import DialogueModel, build_system_prompt
         from nao_proxy import NaoProxy, connect_robot
@@ -61,12 +59,21 @@ class Session:
         self.vision = vision
         self.dry_run = args.dry_run
         self.fixed = load_fixed_lines()
-        self.schema = vision.load_schema()
-        self.target = vision.load_target(schema=self.schema)
-        self.reference_jpeg = (vision.preprocess_image(config.REFERENCE_PHOTO_PATH)
-                               if config.REFERENCE_PHOTO_PATH else None)
-        system_prompt, self.prompt_sha = build_system_prompt()
+        self.workflow = None
+        if not args.legacy_build:
+            from build_workflow import BuildWorkflow, workflow_system_prompt
+            self.workflow = BuildWorkflow(root=args.builds_dir, only=args.activity)
+            system_prompt = workflow_system_prompt()
+            self.prompt_sha = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+        else:
+            self.schema = vision.load_schema()
+            self.target = vision.load_target(schema=self.schema)
+            self.reference_jpeg = (vision.preprocess_image(config.REFERENCE_PHOTO_PATH)
+                                   if config.REFERENCE_PHOTO_PATH else None)
+            system_prompt, self.prompt_sha = build_system_prompt()
 
+        from dotenv import load_dotenv
+        from openai import OpenAI
         load_dotenv(config.DOTENV_PATH)
         self.client = OpenAI()
 
@@ -89,11 +96,12 @@ class Session:
             robot_ip=None if self.dry_run else args.ip,
             naoqi_version=self.nao.naoqi_version(),
             system_prompt_sha256=self.prompt_sha,
-            target_structure_sha256=sha256_file(config.TARGET_STRUCTURE_PATH),
-            target_description_sha256=sha256_file(config.TARGET_DESCRIPTION_PATH),
+            target_structure_sha256=None if self.workflow else sha256_file(config.TARGET_STRUCTURE_PATH),
+            target_description_sha256=None if self.workflow else sha256_file(config.TARGET_DESCRIPTION_PATH),
             fixed_lines_sha256=sha256_file(config.FIXED_LINES_PATH),
-            reference_photo=config.REFERENCE_PHOTO_PATH,
+            reference_photo=None if self.workflow else config.REFERENCE_PHOTO_PATH,
             config=config_snapshot(),
+            workflow_steps=self.workflow.steps if self.workflow else None,
         )
 
         self.dialogue = DialogueModel(self.client, system_prompt)
@@ -187,7 +195,11 @@ class Session:
         self.task_start = time.perf_counter()
         self.log.event("task_start", t_perf=self.task_start)
 
-        if config.FIRST_STEP_AFTER_GREETING:
+        if self.workflow:
+            self.inputs.set_state("processing")
+            self._announce_step()
+            self.inputs.finish_busy()
+        elif config.FIRST_STEP_AFTER_GREETING:
             self.inputs.set_state("processing")
             self.turn += 1
             timer = StageTimer(self.log, "turn", self.turn)
@@ -314,6 +326,8 @@ class Session:
 
     #streams the model reply: gesture on line 1, then speech sentence by sentence
     def _respond(self, content, timer, source):
+        if getattr(self, "workflow", None):
+            content = self.workflow.dialogue_context() + "\n\n" + content
         utterance = self.speech.start_utterance(f"turn{self.turn:03d}", timer,
                                                 on_playback_start=self.inputs.mark_speaking)
         self.current_utterance = utterance
@@ -353,6 +367,8 @@ class Session:
 
     # ------------------------------------------------------------ build check
     def _check(self, t_press, key):
+        if getattr(self, "workflow", None):
+            return self._check_step(t_press, key)
         self.checks += 1
         n = self.checks
         timer = StageTimer(self.log, "check", n, t_start=t_press)
@@ -406,6 +422,71 @@ class Session:
         self._respond(self.vision.describe_diff(diff), timer, source="check")
         self.inputs.finish_busy()
 
+    def _announce_step(self):
+        step = self.workflow.current
+        self.log.event("step_start", activity=step["activity"], step_id=step["step_id"],
+                       reference_sha256=step["reference_sha256"])
+        #Discard dialogue history from the previous step/activity.
+        from dialogue import DialogueModel
+        from build_workflow import workflow_system_prompt
+        self.dialogue = DialogueModel(self.client, workflow_system_prompt())
+        self._say_fixed("step_instruction", self.workflow.announcement())
+
+    def _check_step(self, t_press, key):
+        from step_vision import compare_step
+        self.checks += 1
+        n = self.checks
+        step = self.workflow.current
+        timer = StageTimer(self.log, "check", n, t_start=t_press)
+        timer.mark("bumper_press", t_press)
+        self.log.event("check_start", check=n, key=key, activity=step["activity"], step_id=step["step_id"])
+        try:
+            self._say_fixed("look", self.fixed["look"][(n - 1) % len(self.fixed["look"])])
+            self.inputs.set_state(CHECKING)
+            if not self.nao.wait_for_gestures():
+                self.nao.stop_gestures()
+                if not self.nao.wait_for_gestures():
+                    raise RuntimeError("Robot is still moving")
+            if not self.dry_run:
+                self.nao.set_head_pose(wait=True)
+            path = self.log.image_path(n)
+            method = self._capture(path)
+            current = self.vision.preprocess_image(path)
+            reference = self.vision.preprocess_image(step["reference_photo"])
+            #Fail closed if a reference is edited during the session.
+            if sha256_file(step["reference_photo"]) != step["reference_sha256"]:
+                raise RuntimeError("Reference changed; restart the session to load the updated workflow")
+            with open(self.log.image_path(n, "_sent"), "wb") as f:
+                f.write(current)
+            result, info = compare_step(self.client, current, reference, step["expected"])
+            self.log.event("step_check_result", check=n, activity=step["activity"], step_id=step["step_id"],
+                           result=result, vision=info, image=path, capture_method=method,
+                           reference_sha256=step["reference_sha256"])
+        except Exception as e:
+            self.log.event("check_error", check=n, activity=step["activity"], step_id=step["step_id"], error=repr(e))
+            timer.write(error="step_check")
+            self._say_fixed("check_failed", "I couldn't check that photo. Please clear the view and press my left foot bumper to try again.")
+            self.inputs.finish_busy()
+            return
+        timer.mark("vision_done")
+        verdict = result["verdict"]
+        if verdict == "yes":
+            finished = self.workflow.advance(verdict)
+            if finished:
+                self._say_fixed("step_yes", "Yes, that's correct! We're all done.")
+                timer.write()
+                self.end("workflow_complete", say_goodbye=False)
+                return
+            self._say_fixed("step_yes", "Yes, that's correct! Okay, next step.")
+            self._announce_step()
+        elif verdict == "no":
+            self._say_fixed("step_no", "No, not quite yet. Let's try this step again.")
+            self._say_fixed("step_instruction", self.workflow.announcement())
+        else:
+            self._say_fixed("step_uncertain", "I can't see clearly enough to check. Move your hands away and press my left foot bumper to try again.")
+        timer.write()
+        self.inputs.finish_busy()
+
     #saves the camera image to local_path; returns the method used
     def _capture(self, local_path):
         if self.dry_run:
@@ -431,6 +512,7 @@ class Session:
 
 
 def parse_args(argv=None):
+    from build_workflow import BUILDS_DIR, ACTIVITIES
     parser = argparse.ArgumentParser(description="Run one Mega Bloks build session with the NAO.")
     parser.add_argument("--ip", help="robot IP (not needed with --dry-run)")
     parser.add_argument("--pid", required=True, help="participant ID (also the data folder name)")
@@ -441,17 +523,22 @@ def parse_args(argv=None):
     parser.add_argument("--dry-run", action="store_true", help="typed input and a local image, no robot")
     parser.add_argument("--image", help="dry run: image file used for build checks")
     parser.add_argument("--no-tts", action="store_true", help="dry run: print robot speech instead of synthesizing it")
+    parser.add_argument("--builds-dir", default=str(BUILDS_DIR), help="folder containing tutorial and three builds")
+    parser.add_argument("--activity", choices=ACTIVITIES, help="optional single activity for rehearsal; default runs all four")
+    parser.add_argument("--legacy-build", action="store_true", help="run the old single four-block demo")
     args = parser.parse_args(argv)
     if not args.dry_run and not args.ip:
         parser.error("--ip is required unless --dry-run is set")
     if args.no_tts and not args.dry_run:
         parser.error("--no-tts is only allowed with --dry-run")
+    if args.legacy_build and args.activity:
+        parser.error("--activity cannot be used with --legacy-build")
     return args
 
 
 def main(argv=None):
     args = parse_args(argv)
-    if not args.dry_run:
+    if not args.dry_run and args.legacy_build:
         problems = placeholder_problems()
         if problems:
             print("Not ready for a real session:")
@@ -462,6 +549,9 @@ def main(argv=None):
         session = Session(args)
     except ParticipantFolderExists as e:
         print(e)
+        return 1
+    except (ValueError, OSError) as e:
+        print(f"Not ready: {e}")
         return 1
     try:
         session.run()

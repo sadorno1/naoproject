@@ -4,7 +4,9 @@ A NAO robot guides a participant step by step through building a small structure
 
 The code is for a between-subjects study. Participants are told that the robot is controlled either by an **AI** or by a **human**. The robot's behavior is the same in both conditions: the same prompt, voice, gestures and timing. The condition label is only written to the session log.
 
-The current target is a two-layer wall using four Mega Bloks pieces: two light-blue 2x2s and two red 1x2s. See [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for the wall and camera setup.
+The default workflow is now **tutorial → build 1 → build 2 → build 3**, with an authored instruction, expected description and robot reference photo for each step. See [BUILD_WORKFLOW.md](BUILD_WORKFLOW.md) for the folder structure, head-tap photo capture and run commands. The step templates are intentionally blank until you supply the photos and instructions; new sessions will not start with unfinished steps.
+
+The earlier two-layer, four-block wall is retained with `--legacy-build`; see [MEGA_BLOKS_SETUP.md](MEGA_BLOKS_SETUP.md) for that demo. Older single-build examples below need `--legacy-build` until the new workflow is authored.
 
 ## Demo video
 
@@ -20,9 +22,9 @@ The current target is a two-layer wall using four Mega Bloks pieces: two light-b
 
 **Checking the build**
 1. The participant presses a **left foot bumper**. The robot says "let me take a look" and takes a photo with its head camera.
-2. A vision model turns the photo into structured JSON describing each block's color, size, position, layer and orientation.
-3. Python code compares that description to the target structure. It reports which blocks are correct, wrong (moved, rotated, on the wrong layer, or extra) or not placed yet.
-4. The language model turns the result into a spoken hint. A full, clear match ends the session with a goodbye. If the camera view is unclear or no blocks are visible, NAO asks for a clearer view instead of treating unseen blocks as mistakes.
+2. A vision model compares the live photo with the current step's robot reference photo and your expected-state description, returning yes, no or uncertain.
+3. On yes, code says “Yes, that's correct! Okay, next step,” advances once, and speaks the next authored instruction. No, uncertainty and failed checks keep the current step.
+4. After the tutorial and all three builds pass their final checks, the session ends. The old coordinate-based checker is used only with `--legacy-build`.
 
 **Logging:** Every session writes a timestamped event log (`.jsonl`) with transcripts, robot utterances, gestures, sensor presses, build-check results, per-stage latencies and completion time. The log also stores hashes of the prompt files, which confirm that both conditions used identical prompts.
 

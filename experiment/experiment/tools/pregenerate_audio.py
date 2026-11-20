@@ -17,7 +17,25 @@ def main():
     load_dotenv(config.DOTENV_PATH)
     tts = TTS(OpenAI())
     lines = load_fixed_lines()
-    for text in [lines["greeting"], *lines["look"], lines["goodbye"]]:
+    texts = [lines["greeting"], *lines["look"], lines["goodbye"]]
+    #Cache reviewed step instructions too; drafts must not prevent caching the basic phrases.
+    from build_workflow import BuildWorkflow
+    try:
+        workflow = BuildWorkflow()
+    except (ValueError, OSError) as e:
+        print(f"Step instructions not ready for caching: {e}")
+    else:
+        for i in range(len(workflow.steps)):
+            workflow.index = i
+            texts.append(workflow.announcement())
+    texts.extend([
+        "Yes, that's correct! Okay, next step.",
+        "Yes, that's correct! We're all done.",
+        "No, not quite yet. Let's try this step again.",
+        "I can't see clearly enough to check. Move your hands away and press my left foot bumper to try again.",
+        "I couldn't check that photo. Please clear the view and press my left foot bumper to try again.",
+    ])
+    for text in texts:
         existed = os.path.exists(tts.cache_path(text))
         path = tts.ensure_cached(text)
         print(f"{'cached ' if existed else 'created'} {os.path.basename(path)}  {text!r}")
