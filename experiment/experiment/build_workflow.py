@@ -117,7 +117,7 @@ class BuildWorkflow:
         prefix = f"{step['start_instruction']} " if include_start and step["start_instruction"] else ""
         if step.get("completion"):
             return prefix + step["instruction"]
-        return prefix + step["instruction"] + " Press my right bumper when you're ready for a check."
+        return prefix + step["instruction"] + " Press the bumper on my foot that says check when you're ready."
 
     def dialogue_context(self):
         step = self.current
@@ -129,8 +129,8 @@ class BuildWorkflow:
         return ("[CURRENT PLACEMENT — controlled by the session]\n"
                 f"Instruction: {step['instruction']}\nExpected state: {step['expected']}\n"
                 "Answer only questions about this step. Do not advance, invent another placement, "
-                "or say the build is correct from the participant's words. Ask for a right-foot camera "
-                "check when they are ready. The reference describes the expected state, not what is visible now.")
+                "or say the build is correct from the participant's words. Ask them to press the bumper "
+                "on the foot labeled CHECK when ready. The reference describes the expected state, not what is visible now.")
 
 
 def workflow_system_prompt():
@@ -140,8 +140,9 @@ def workflow_system_prompt():
             "Sound relaxed and conversational. Never read out step numbers or activity titles; these are internal labels. "
             "Do not invent inventory, positions, steps, or visual observations. Do not declare yes/no or "
             "advance from a participant saying done. When unsure, repeat the supplied instruction or ask "
-            "for a right-foot camera check. Directions are the participant's view; do not reinterpret "
-            "directions supplied by the author. Left foot bumper is hold-to-talk, release-to-send. "
-            "Right foot bumper requests a check. Foot names refer to NAO's own sides. "
+            "them to press the bumper on the foot labeled CHECK. Directions are the participant's view; do not reinterpret "
+            "directions supplied by the author. The bumper on the foot labeled TALK is hold-to-talk, release-to-send. "
+            "The bumper on the foot labeled CHECK requests a check. Always use these labels when explaining controls; "
+            "never describe the controls by left/right. Left/right still applies to block placement directions. "
             "Line 1 must be one expression from: " + ", ".join(config.EXPRESSIONS) +
             ". Remaining lines are only spoken words, without markdown.")

@@ -60,7 +60,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertNotIn("Step 1", announcement)
         self.assertNotIn(flow.current["title"], announcement)
         self.assertIn("Place block 1.", announcement)
-        self.assertIn("right bumper", announcement)
+        self.assertIn("foot that says check", announcement)
         context = flow.dialogue_context()
         self.assertNotIn("Step 1 of", context)
         self.assertNotIn("Activity:", context)
@@ -165,6 +165,21 @@ class WorkflowTests(unittest.TestCase):
         self.assertNotIn("head", flow.announcement().lower())
         self.assertEqual(len([s for s in flow.steps if s["activity"] == "tutorial"]), 4)
         self.assertIsNotNone(flow.steps[2]["reference_photo"])
+
+    def test_spoken_controls_use_labels_while_block_directions_are_preserved(self):
+        import re
+        from run_session import load_fixed_lines
+        flow = BuildWorkflow()
+        spoken = [load_fixed_lines()["greeting"]]
+        for i in range(len(flow.steps)):
+            flow.index = i
+            spoken.append(flow.announcement())
+        for text in spoken:
+            self.assertIsNone(re.search(r"\b(?:left|right)(?: foot)? bumper\b", text, re.I))
+        self.assertIn("foot that says talk", spoken[0])
+        self.assertIn("foot that says check", spoken[0])
+        self.assertIn("right side", flow.steps[3]["instruction"])
+        self.assertIn("left side", flow.steps[4]["instruction"])
 
     def test_draft_mini_build_prevents_tutorial_starting(self):
         self.controls_session()
@@ -299,7 +314,7 @@ class WorkflowTests(unittest.TestCase):
         with patch("step_vision.compare_step", side_effect=RuntimeError("Offline")):
             session._check(1.0, "RightBumperPressed")
         self.assertEqual(session.workflow.index, 0)
-        session._say_fixed.assert_any_call("check_failed", "I couldn't check that photo. Please clear the view and press my right foot bumper to try again.")
+        session._say_fixed.assert_any_call("check_failed", "I couldn't check that photo. Please clear the view and press the bumper on my foot that says check to try again.")
 
     def test_changed_reference_does_not_call_model_or_advance(self):
         session = self.session()

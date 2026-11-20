@@ -474,7 +474,7 @@ class Session:
         timer.mark("bumper_press", t_press)
         self.log.event("check_start", check=n, key=key, activity=step["activity"], step_id=step["step_id"])
         if step.get("completion") == "talk":
-            self._say_fixed("tutorial_reminder", "We'll practice checking next. First, hold my left foot bumper while you speak, then let go.")
+            self._say_fixed("tutorial_reminder", "We'll practice checking next. First, hold the bumper on my foot that says talk while you speak, then let go.")
             timer.write(skipped="tutorial_talk_first")
             self.inputs.finish_busy()
             return
@@ -507,7 +507,7 @@ class Session:
         except Exception as e:
             self.log.event("check_error", check=n, activity=step["activity"], step_id=step["step_id"], error=repr(e))
             timer.write(error="step_check")
-            self._say_fixed("check_failed", "I couldn't check that photo. Please clear the view and press my right foot bumper to try again.")
+            self._say_fixed("check_failed", "I couldn't check that photo. Please clear the view and press the bumper on my foot that says check to try again.")
             self.inputs.finish_busy()
             return
         timer.mark("vision_done")
@@ -519,7 +519,7 @@ class Session:
             self._say_workflow_feedback(step, "retry", reason=result["reason"])
             self._say_fixed("step_instruction", self.workflow.announcement(include_start=False))
         else:
-            self._say_fixed("step_uncertain", "I can't see clearly enough to check. Move your hands away and press my right foot bumper to try again.")
+            self._say_fixed("step_uncertain", "I can't see clearly enough to check. Move your hands away and press the bumper on my foot that says check to try again.")
         timer.write()
         self.inputs.finish_busy()
 

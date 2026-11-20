@@ -20,10 +20,10 @@ Tap and release the front head sensor for each photo. Press Ctrl+C to stop and c
 
 ## Controls in the participant session
 
-- Hold NAO's **left foot bumper** to talk; release to send. Eyes are green while recording.
-- Press NAO's **right foot bumper** to request a check.
+- Hold the bumper on the foot labeled **TALK** to talk; release to send. Eyes are green while recording.
+- Press the bumper on the foot labeled **CHECK** to request a check.
 - NAO's head sensor is inactive. Head tapping is only used in the separate authoring tool.
-- Foot sides mean NAO's own sides, mirrored when facing it.
+- For setup, TALK is NAO's left foot and CHECK is its right foot. Spoken guidance uses the labels.
 - Press `q` in the terminal to end early.
 - An early experimenter stop says the friendly `early_goodbye` phrase from `fixed_lines.json`, rather than claiming the build is finished. On Linux type `q` then Enter; in dry run use `/end`. Normal completion keeps its celebration.
 

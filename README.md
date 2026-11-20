@@ -41,13 +41,13 @@ Greeting
 
 | Control | Action |
 |---|---|
-| Hold the **left foot bumper** | Record speech; eyes turn green |
-| Release the left bumper | Send the recording for transcription |
-| Press the **right foot bumper** | Request a camera check |
+| Hold the bumper on the foot labeled **TALK** | Record speech; eyes turn green |
+| Release the TALK bumper | Send the recording for transcription |
+| Press the bumper on the foot labeled **CHECK** | Request a camera check |
 | Head sensor | Inactive during the participant session |
 | `q` in the terminal | Experimenter ends the session |
 
-Left/right mean **NAO's own sides**, mirrored when the participant faces it. Short accidental talk holds are discarded. Inputs are ignored while busy by default. Head tapping is used only in a separate experimenter reference-photo tool; it is never taught to participants or enabled in their session.
+For setup, put **TALK on NAO's left foot** and **CHECK on NAO's right foot** (NAO's own sides). Spoken instructions refer to the labels instead of foot sides. Left/right still applies normally to block-placement instructions. Short accidental talk holds are discarded. Inputs are ignored while busy by default. Head tapping is used only in a separate experimenter reference-photo tool; it is never taught to participants or enabled in their session.
 
 ## How a construction check works
 

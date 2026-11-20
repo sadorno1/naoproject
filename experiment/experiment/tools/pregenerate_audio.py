@@ -29,13 +29,13 @@ def main():
             for i in range(len(workflow.steps)):
                 workflow.index = i
                 texts.append(workflow.announcement())
-    texts.append("We'll practice checking next. First, hold my left foot bumper while you speak, then let go.")
+    texts.append("We'll practice checking next. First, hold the bumper on my foot that says talk while you speak, then let go.")
     texts.extend([
         "That's it, nice work!",
         "Nice work, you finished it! Ready to try the next build?",
         "You did it! Thanks for building with me. That was fun!",
-        "I can't see clearly enough to check. Move your hands away and press my right foot bumper to try again.",
-        "I couldn't check that photo. Please clear the view and press my right foot bumper to try again.",
+        "I can't see clearly enough to check. Move your hands away and press the bumper on my foot that says check to try again.",
+        "I couldn't check that photo. Please clear the view and press the bumper on my foot that says check to try again.",
     ])
     for text in texts:
         existed = os.path.exists(tts.cache_path(text))

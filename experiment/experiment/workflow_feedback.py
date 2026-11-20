@@ -24,6 +24,7 @@ def generate_feedback(client, step, kind, reason="", next_title=None):
             "Write a relaxed, conversational spoken response. Use at most 6 words for a correct placement, "
             "15 words for a celebration or 25 words for a retry hint. "
             "Be warm, encouraging and natural; avoid patronizing language. "
+            "Refer to robot controls by the TALK and CHECK foot labels, never by left or right foot. "
             "Do not read out step numbers, activity titles, or build numbers. Refer naturally to this build or the next one. "
             "The session has verified the practiced control or the photo checker has established the build result. Do not reassess it. "
             "For control practice, encourage using the control successfully, never say a build was completed. "

@@ -1,7 +1,7 @@
 {
   "title": "Getting to know NAO",
   "mode": "controls_and_build",
-  "start_instruction": "Let's practice talking and checking, then try a small build. My left and right are opposite yours when you face me.",
+  "start_instruction": "Let's practice talking and checking, then try a small build. Look for the talk and check labels on my feet.",
   "mini_build_intro": "Now let's try a small practice build together.",
   "steps": [
     "step_01",

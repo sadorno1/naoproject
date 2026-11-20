@@ -1,6 +1,6 @@
 {
   "_comment": "Shared session phrases; independent of legacy prompts and per-step build references.",
-  "greeting": "Hi, I'm Nao. Let's build together! Hold my left bumper to talk, then let go. Press my right bumper when you'd like me to check.",
+  "greeting": "Hi, I'm Nao. Let's build together! Hold the bumper on my foot that says talk, then let go when you're done speaking. Press the bumper on my foot that says check when you'd like me to look.",
   "look": [
     "Okay, let me take a look.",
     "Let me check that.",
