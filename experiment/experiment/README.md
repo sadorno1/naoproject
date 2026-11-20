@@ -15,6 +15,7 @@ See the [main README](../../README.md) for installation, API key setup, current 
 - NAO's head sensor is inactive. Head tapping is only used in the separate authoring tool.
 - Foot sides mean NAO's own sides, mirrored when facing it.
 - Press `q` in the terminal to end early.
+- An early experimenter stop says the friendly `early_goodbye` phrase from `prompts/fixed_lines.json`, rather than claiming the build is finished. On Linux type `q` then Enter; in dry run use `/end`. Normal completion keeps its celebration.
 
 ## Commands from this folder
 

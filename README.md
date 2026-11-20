@@ -152,6 +152,8 @@ python run_session.py --ip ROBOT_IP --pid tutorial_test01 --condition ai --activ
 
 Use `--activity build_1`, `build_2` or `build_3` to rehearse one main build. Use a new participant ID for each session or pass `--force-new` to create a timestamped subfolder. Sessions start at the first selected step; they do not resume progress automatically. Press `q` to end early.
 
+If you end an unfinished session with `q`, NAO says: “Aw, it looks like we're out of time! Thank you for building with me. I had a lot of fun!” This is the editable `early_goodbye` phrase in `prompts/fixed_lines.json`. It is cached at startup and by `tools/pregenerate_audio.py`. Normal completion keeps the generated celebration. On Linux's line-based terminal reader, type `q` then Enter; in dry run use `/end`.
+
 The study condition can be `ai` or `human`. It is logged only; it does not choose a different implementation, prompt or voice.
 
 ### Dry run without the robot

@@ -17,7 +17,7 @@ def main():
     load_dotenv(config.DOTENV_PATH)
     tts = TTS(OpenAI())
     lines = load_fixed_lines()
-    texts = [lines["greeting"], *lines["look"], lines["goodbye"]]
+    texts = [lines["greeting"], *lines["look"], lines["goodbye"], lines["early_goodbye"]]
     #Cache reviewed step instructions too; drafts must not prevent caching the basic phrases.
     from build_workflow import ACTIVITIES, BuildWorkflow
     for activity in ACTIVITIES:

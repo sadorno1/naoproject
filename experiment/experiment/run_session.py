@@ -20,8 +20,9 @@ def load_fixed_lines(path=config.FIXED_LINES_PATH):
     import json
     with open(path, "r", encoding="utf-8") as f:
         lines = json.load(f)
-    if not lines.get("greeting") or not lines.get("goodbye") or len(lines.get("look", [])) != 3:
-        raise ValueError("fixed_lines.json needs greeting, goodbye and exactly 3 look lines")
+    if (not lines.get("greeting") or not lines.get("goodbye") or not lines.get("early_goodbye")
+            or len(lines.get("look", [])) != 3):
+        raise ValueError("fixed_lines.json needs greeting, goodbye, early_goodbye and exactly 3 look lines")
     return lines
 
 
@@ -128,7 +129,8 @@ class Session:
         self.nao.set_head_pose()
         self.nao.set_eyes(config.EYES_IDLE_RGB)
         print("Preparing cached audio for fixed lines...")
-        self.speech.prepare_fixed([self.fixed["greeting"], *self.fixed["look"], self.fixed["goodbye"]])
+        self.speech.prepare_fixed([self.fixed["greeting"], *self.fixed["look"], self.fixed["goodbye"],
+                                   self.fixed["early_goodbye"]])
         if not self.dry_run:
             subscribed = self.inputs.attach(self.nao)
             self.log.event("sensors_subscribed", keys=subscribed)
@@ -241,7 +243,14 @@ class Session:
         self.ended = True
         self.inputs.set_state(ENDED)
         if say_goodbye:
-            self._say_fixed("goodbye", self.fixed["goodbye"], config.GOODBYE_GESTURE)
+            workflow = getattr(self, "workflow", None)
+            early = reason == "experimenter" and (workflow is None or not workflow.complete)
+            kind = "early_goodbye" if early else "goodbye"
+            try:
+                self._say_fixed(kind, self.fixed[kind], config.GOODBYE_GESTURE)
+            except Exception as e:
+                #A playback failure must not prevent session logging or robot cleanup.
+                self.log.event("goodbye_error", kind=kind, error=repr(e))
         t_end = time.perf_counter()
         self.log.event(
             "session_end",

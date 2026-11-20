@@ -93,7 +93,7 @@ GOODBYE_GESTURE = None                #None = no gesture with the fixed goodbye
 # ---------------------------------------------------------------- session
 HARD_CAP_MINUTES = None               #None = off (default). a number ends the session after that many minutes
 SAY_GOODBYE_ON_HARD_CAP = True
-SAY_GOODBYE_ON_EXPERIMENTER_END = False
+SAY_GOODBYE_ON_EXPERIMENTER_END = True  #q ends an unfinished session with the early_goodbye line
 EXPERIMENTER_END_KEY = "q"
 #after the fixed greeting, have the model give the first build step immediately
 FIRST_STEP_AFTER_GREETING = True
