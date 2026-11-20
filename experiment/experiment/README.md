@@ -1,131 +1,100 @@
-# Mega Bloks build guidance experiment (NAO)
+# NAO experiment code
 
-The NAO starts with two control exercises (practice right-foot talking, then left-foot checks), followed by a tutorial mini build and three main builds with authored steps and robot reference photos. The first two controls need no references; all construction steps do. The tutorial never asks the participant to use the head sensor. The participant holds the **right foot bumper** to talk and presses the **left foot bumper** for a check. A successful practice interaction advances a control exercise; a yes from the photo checker advances a construction step. No or uncertainty stays on the current placement. See [the workflow guide](../../BUILD_WORKFLOW.md) for authoring, author-only head-tap reference capture and session commands. The mini build and main builds are drafts until photos and instructions are supplied. Use `--activity tutorial` to rehearse the tutorial once its mini build is authored.
+The current participant flow is:
 
-The older single-build setup details below are preserved for `--legacy-build` mode. Add `--legacy-build` to the old session examples when using the four-block demo. The new step-photo mode does not use the generated illustration or old target JSON.
+**Talk practice → check practice → tutorial mini build → build 1 → build 2 → build 3.**
 
-The condition (`ai` / `human`) is written **only** to the log. The prompt, voice, gestures and behavior are identical in both conditions, and each log records a SHA-256 of the system prompt so you can confirm this (`summarize_log.py` warns if the hashes differ).
+The tutorial is finished only after its mini build passes. Each construction step needs your instruction, expected-state description and approved robot reference photo. The mini-build and main-build placements are drafts until you author them.
 
-## VIDEO LINK
+See the [main README](../../README.md) for installation, API key setup, current controls, camera setup and run commands. See [BUILD_WORKFLOW.md](../../BUILD_WORKFLOW.md) for the detailed step structure, author-only capture workflow and JSON examples.
 
-[Demo Video] (https://drive.google.com/file/d/1tWsVY2K5dTFUNsXjIQ5FXgopgV_XcIl8/view?usp=sharing)
+## Controls in the participant session
 
-## Setup
+- Hold NAO's **right foot bumper** to talk; release to send. Eyes are green while recording.
+- Press NAO's **left foot bumper** to request a check.
+- NAO's head sensor is inactive. Head tapping is only used in the separate authoring tool.
+- Foot sides mean NAO's own sides, mirrored when facing it.
+- Press `q` in the terminal to end early.
 
-```
-pip install -r ../requirements.txt
-pip install -r requirements-local-stt.txt     # only for TRANSCRIBE_BACKEND = "faster-whisper"
-```
+## Commands from this folder
 
-From the repository root, run `python setup_keys.py` and paste your OpenAI API key at the hidden prompt. It saves the key in `experiment/.env` (one folder above this code folder), which the session, photo evaluator, audio cache tool and model benchmark already load. From this folder you can run `python ../../setup_keys.py`. The helper preserves other settings and does not print or validate the key with OpenAI. The `.env` file is excluded from Git; never put your actual key in tracked code or `experiment/.env.example`. Restart running sessions after changing the key.
+Configure the API key:
 
-## Files
-
-| File | What it is |
-|---|---|
-| `run_session.py` | entry point |
-| `config.py` | **every** setting: sensor keys, models, debounce, posture, volume, head pose, flags |
-| `prompts/system_prompt.txt` | dialogue prompt (`{TARGET_DESCRIPTION}` and `{EXPRESSIONS}` get filled in) |
-| `prompts/target_description.txt` | **edit**: the target in words, from the participant's view |
-| `prompts/target_structure.json` | **edit**: the target as blocks, in the camera's frame |
-| `prompts/structure_schema.json` | the JSON schema the vision model must follow (colors and block types live here) |
-| `prompts/vision_prompt.txt` | vision instructions (coordinate conventions) |
-| `prompts/fixed_lines.json` | **edit**: greeting, 3 "take a look" lines (rotated in fixed order), goodbye |
-| `tools/sensor_probe.py` | prints which sensor keys fire when you touch the robot |
-| `tools/camera_probe.py` | tests ALPhotoCapture vs ALVideoDevice and checks framing |
-| `tools/gesture_probe.py` | lists or plays the Sit/Stand animations for each expression |
-| `tools/bench_models.py` | verifies the models and benchmarks latency on your network |
-| `tools/eval_vision.py` | accuracy and confusion of the build check on labeled photos |
-| `tools/pregenerate_audio.py` | caches the fixed lines as audio |
-| `tools/summarize_log.py` | turns logs into counts (works on one log or a whole folder; `--csv`) |
-
-## One-time preparation before the pilot
-
-1. **Sensors**: `python tools/sensor_probe.py <ip>`. Hold and release NAO's right foot bumper, then press its left foot bumper. Make sure the printed names match `TALK_SENSOR_KEY` / `CHECK_SENSOR_KEYS` in `config.py`. Also watch for flicker: extra 0/1 events while you hold steadily.
-2. **Camera**: put the build on the marked spot, then run `python tools/camera_probe.py <ip> --set-head`. Adjust `HEAD_PITCH` / `HEAD_YAW` / `CAMERA_INDEX` until the build fills the frame, and set `CAPTURE_METHOD` to whichever method worked.
-3. **Gestures** (disabled in sessions by default; `--play` explicitly previews them): `python tools/gesture_probe.py <ip> --list-all`. Fix `SIT_ANIMATIONS` in `config.py` (the current Sit paths are unverified guesses). Then use `--play nod hi listen happy thinking excited surprised` to see each one seated. A missing animation means no gesture; Stand animations are never played while seated.
-4. **Models**: `python tools/bench_models.py`. It checks that every candidate exists, streams, and follows the "line 1 = expression" format (LLM), and that the vision candidates accept image input with a JSON schema. It also times TTS and transcription. Copy its picks into `config.py`.
-5. **Vision accuracy**: put photos taken **with the robot camera at the session head pose** into `test_photos/correct/`, `test_photos/near_miss/` and `test_photos/wrong/`, then run
-   `python tools/eval_vision.py test_photos --repeat 2`, and again with `--no-reference` to compare against the bundled top-view illustration enabled by default. Save separate `--out` files to retain both results. See the root `MEGA_BLOKS_SETUP.md` for details.
-   The number that matters most is **false matches**: those would end a session early.
-6. **Review** the configured Mega Bloks wall target and fixed lines, then run `python tools/pregenerate_audio.py`. A real session refuses to start while any `TODO` remains.
-
-## Running a session
-
-```
-python run_session.py --ip 192.168.1.100 --pid P07 --condition ai
+```bash
+python ../../setup_keys.py
 ```
 
-- The script refuses to start if `data/P07/` already exists. Add `--force-new` to create `data/P07/<timestamp>/` instead.
-- Startup order: the robot goes to the configured posture → sets the volume and head pose once → uploads the cached fixed lines → greets → gives the first step (`FIRST_STEP_AFTER_GREETING`). After that it waits for speech or a bumper press. There are no silence prompts.
-- **To end early**, press `q` in the terminal window. It's logged as `end_reason = experimenter`. Ctrl+C is logged as `keyboard_interrupt`.
-- There is no time limit. `HARD_CAP_MINUTES` in `config.py` is off by default.
+It saves the key in `../.env` (the repository's `experiment/.env`), which Git ignores. Restart running sessions after replacing it.
 
-### Dry run (no robot)
+Check sensors and camera:
 
-```
-python run_session.py --dry-run --pid test01 --condition ai --image test_photos/correct/a.jpg [--no-tts]
+```bash
+python tools/sensor_probe.py ROBOT_IP
 ```
 
-Type what the participant says. `/check [image]` simulates a bumper press, and `/end` ends the session. Robot actions print as `[Mock ...]`. The OpenAI API is still used. `--no-tts` skips speech synthesis.
+Stop the sensor probe with Ctrl+C before continuing:
 
-## How a turn works and what gets timed
-
-Hold NAO's right foot bumper and the eyes turn green and recording starts. Release it and the eyes go back to neutral. Then:
-1. The wav is fetched over the single session SFTP connection.
-2. It's transcribed, and the wav is deleted on the laptop and on the robot.
-3. The LLM reply streams in. When line 1 arrives an optional gesture is requested (disabled by default), and each finished sentence goes through TTS, upload and playback while the rest is still generating.
-
-Each turn logs a `latency` event with seconds since release for `wav_transfer`, `transcription`, `llm_first_token`, `tts_first_audio`, `playback_start` and more. Checks log `bumper_press`, `look_line_done`, `capture_done` and `vision_done`.
-
-The robot may leave a short gap between sentences, because each sentence is a separate file.
-
-While the robot is processing or speaking, the talk sensor and bumpers are ignored but **logged** with `robot_state` and `ignored_reason`. `ALLOW_BARGE_IN = True` lets a right-bumper press stop the robot's speech.
-
-### Transcription options (`TRANSCRIBE_BACKEND`)
-
-- **`gpt-4o-mini-transcribe`** (default): fast and cheap, with good accuracy.
-- **`whisper-1`**: robust, but usually slower.
-- **`faster-whisper`** (local): no network round trip and the audio never leaves the laptop. Speed depends on your CPU/GPU and the model size, small models make more mistakes on noisy NAO mic audio, and it loads once at startup.
-
-Compare them with the `transcription` latency in your pilot logs.
-
-## Build check and its limits
-
-- The target and observations use stud coordinates in the **camera's** frame: x is left to right as the robot sees it, y is front to back, and layer 0 sits on the table. `(x, y)` is the block's front-left stud. Orientation 0 means the long side runs along x.
-- **Matching rules:** color, type, orientation and layer must match exactly. x/y must match exactly after one shift of the whole structure, so the build zone can move. If two shifts tie, the result is logged as `alignment_ambiguous`.
-- A check reports correct / wrong (move, rotate, other layer, or extra) / not placed yet. Only a full match ends the session.
-- **Occlusion:**
-  - A single front camera can't see blocks behind or under others, and depth (y) is its weakest estimate.
-  - The vision model is told to mark blocks it can't see as `not_visible` instead of guessing. Those blocks are counted as unverifiable, never as right or wrong.
-  - In `target_structure.json`, set `"front_visible": false` for blocks the camera can't see in the finished build. A full match doesn't require them, so **a missing hidden block can't be detected**.
-- **Lone blocks:** because of the shift tolerance, a single placed block is always "in the right place". Positions only become meaningful once two or more blocks are down.
-- `PARTICIPANT_SIDE` turns camera offsets into the participant's left/right. The default `"facing"` means the participant sits across from the robot.
-- Every check saves `images/check_NNN.jpg` (raw) and `check_NNN_sent.jpg` (exactly what the model saw). The log has the vision JSON and the diff.
-
-## Data
-
-`data/<pid>/events_<timestamp>.jsonl` holds one JSON object per line. The main event types are: `session_start` (condition, config, prompt hash), `task_start`, `talk_sensor`, `bumper`, `recording_*`, `audio_deleted`, `participant_utterance`, `identity_question`, `robot_utterance`, `gesture`, `latency`, `check_start`, `check_result`, `check_error`, `session_end` (end_reason, task_completion_time_s).
-
-Raw audio is never kept. `data/`, `audio_cache/` and `tmp/` are gitignored.
-
-```
-python tools/summarize_log.py data --csv summary.csv
+```bash
+python tools/camera_probe.py ROBOT_IP --set-head --camera 0 --out tmp/camera_top
+python tools/camera_probe.py ROBOT_IP --set-head --camera 1 --out tmp/camera_bottom
 ```
 
-The summary reports bumper presses (total, accepted, ignored), robot instructions, repeated instructions (≥ 0.9 normalized similarity to any earlier robot utterance), identity questions, completion time and median stage latencies.
+Review the saved images and save the successful camera/head settings in `config.py`. Use those same settings when capturing references.
 
-Identity questions are found by keyword matching (`IDENTITY_QUESTION_PATTERNS`), which misses paraphrases. Every transcript is in the log for manual coding.
+Capture reference photos, one activity at a time, with no participant session running:
 
-## Pre-session checklist
+```bash
+python tools/capture_build_steps.py ROBOT_IP --build tutorial
+python tools/capture_build_steps.py ROBOT_IP --build build_1
+python tools/capture_build_steps.py ROBOT_IP --build build_2
+python tools/capture_build_steps.py ROBOT_IP --build build_3
+```
 
-- [ ] Robot on, charged, connected; `ping <ip>` works; **same network setup (Wi-Fi vs. cable, router) as the pilot**
-- [ ] Robot on the floor with free space around it (it moves to the configured posture at startup)
-- [ ] `tools/sensor_probe.py` passed today: right bumper = `TALK_SENSOR_KEY`, left bumper = `CHECK_SENSOR_KEYS`; both fire
-- [ ] Build area on the marked spot, lighting as in the test photos; `camera_probe.py --set-head` framing checked
-- [ ] Volume (`VOLUME`) checked at the participant's seat
-- [ ] `target_description.txt`, `target_structure.json` and `fixed_lines.json` are the final versions (no TODO); `pregenerate_audio.py` run after the last edit
-- [ ] Models in `config.py` are the benchmarked ones
-- [ ] Participant ID is new, and the condition matches the script the experimenter just read to the participant
-- [ ] Blocks reset; video recording started
-- [ ] Start: `python run_session.py --ip <ip> --pid <pid> --condition <ai|human>`; terminal window focused so `q` works
+In this authoring tool only, tap and release the front head sensor after arranging each cumulative placement. The tutorial starts at `step_03`; the first two steps are control exercises. Ctrl+C stops. Existing photos are not overwritten. Review each photo, fill its neighboring `step.json`, and set `ready` to true.
+
+After authoring the steps:
+
+```bash
+python tools/pregenerate_audio.py
+python run_session.py --ip ROBOT_IP --pid P01 --condition ai
+```
+
+For one activity:
+
+```bash
+python run_session.py --ip ROBOT_IP --pid tutorial01 --condition ai --activity tutorial
+```
+
+The tutorial mini build must be ready even when running the tutorial alone. The three main builds may still be drafts in this rehearsal mode. The condition label (`ai` / `human`) is logged only and does not change the robot's implementation.
+
+## Check results
+
+Correct steps receive generated encouragement, then the next authored instruction. Completing an activity gets a celebration and introduction to the next one. Incorrect steps receive a brief hint followed by the same instruction. Uncertain or failed checks stay on the current step and request another try. The final activity ends with a celebration.
+
+Saying “done” does not pass a construction step. During the tutorial's first exercise, understandable speech completes talking practice; during its second exercise, a successful capture completes check practice. Neither exercise judges a build. All later tutorial and main-build placements use photo comparisons.
+
+## Logs and testing
+
+`data/<pid>/events_<timestamp>.jsonl` records sensor events, transcripts, spoken responses, loaded steps, reference hashes, check results and feedback. Current-build photos are stored in the participant folder; raw microphone recordings are deleted after transcription. Inspect `step_check_result`, `workflow_feedback` and `tutorial_control_passed` for the new workflow. Reusing a participant ID requires `--force-new`.
+
+From the repository root:
+
+```bash
+python -m unittest discover -s experiment/experiment/tests -v
+```
+
+Offline tests do not establish live recognition accuracy, hint quality or audio loudness. Rehearse every authored step with actual NAO photos before the participant session. The legacy evaluator `tools/eval_vision.py` does not evaluate the new step-photo workflow.
+
+## Legacy mode
+
+The old four-block checker is preserved explicitly:
+
+```bash
+python run_session.py --ip ROBOT_IP --pid old01 --condition ai --legacy-build
+```
+
+Its setup is in [MEGA_BLOKS_SETUP.md](../../MEGA_BLOKS_SETUP.md). Editing the old target JSON or using its generated illustration does not configure the current tutorial-and-three-build workflow.
+
+## Demo video
+
+[Earlier demo video](https://drive.google.com/file/d/1tWsVY2K5dTFUNsXjIQ5FXgopgV_XcIl8/view?usp=sharing)
