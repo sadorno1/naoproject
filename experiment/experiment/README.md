@@ -1,6 +1,6 @@
 # Mega Bloks build guidance experiment (NAO)
 
-The NAO describes a target Mega Bloks structure step by step. The participant holds the **front head sensor** to talk and presses a **foot bumper** to request a build check. The robot photographs the build, a vision model turns the photo into structured JSON, code compares it to the target, and the robot phrases the result. A full match ends the session.
+The NAO describes a target Mega Bloks structure step by step. The participant holds the **right foot bumper** to talk and presses a **left foot bumper** to request a build check. The robot photographs the build, a vision model turns the photo into structured JSON, code compares it to the target, and the robot phrases the result. A full match ends the session.
 
 The condition (`ai` / `human`) is written **only** to the log. The prompt, voice, gestures and behavior are identical in both conditions, and each log records a SHA-256 of the system prompt so you can confirm this (`summarize_log.py` warns if the hashes differ).
 
@@ -39,7 +39,7 @@ As in lab 3, the `.env` with `OPENAI_API_KEY=...` goes in the **parent** folder 
 
 ## One-time preparation before the pilot
 
-1. **Sensors**: `python tools/sensor_probe.py <ip>`. Hold and release the front head sensor, then press each bumper. Make sure the printed names match `TALK_SENSOR_KEY` / `CHECK_SENSOR_KEYS` in `config.py`. Also watch for flicker: extra 0/1 events while you hold steadily.
+1. **Sensors**: `python tools/sensor_probe.py <ip>`. Hold and release NAO's right foot bumper, then press its left foot bumper. Make sure the printed names match `TALK_SENSOR_KEY` / `CHECK_SENSOR_KEYS` in `config.py`. Also watch for flicker: extra 0/1 events while you hold steadily.
 2. **Camera**: put the build on the marked spot, then run `python tools/camera_probe.py <ip> --set-head`. Adjust `HEAD_PITCH` / `HEAD_YAW` / `CAMERA_INDEX` until the build fills the frame, and set `CAPTURE_METHOD` to whichever method worked.
 3. **Gestures** (disabled in sessions by default; `--play` explicitly previews them): `python tools/gesture_probe.py <ip> --list-all`. Fix `SIT_ANIMATIONS` in `config.py` (the current Sit paths are unverified guesses). Then use `--play nod hi listen happy thinking excited surprised` to see each one seated. A missing animation means no gesture; Stand animations are never played while seated.
 4. **Models**: `python tools/bench_models.py`. It checks that every candidate exists, streams, and follows the "line 1 = expression" format (LLM), and that the vision candidates accept image input with a JSON schema. It also times TTS and transcription. Copy its picks into `config.py`.
@@ -69,7 +69,7 @@ Type what the participant says. `/check [image]` simulates a bumper press, and `
 
 ## How a turn works and what gets timed
 
-Hold the head sensor and the eyes turn green and recording starts. Release it and the eyes go back to neutral. Then:
+Hold NAO's right foot bumper and the eyes turn green and recording starts. Release it and the eyes go back to neutral. Then:
 1. The wav is fetched over the single session SFTP connection.
 2. It's transcribed, and the wav is deleted on the laptop and on the robot.
 3. The LLM reply streams in. When line 1 arrives an optional gesture is requested (disabled by default), and each finished sentence goes through TTS, upload and playback while the rest is still generating.
@@ -78,7 +78,7 @@ Each turn logs a `latency` event with seconds since release for `wav_transfer`, 
 
 The robot may leave a short gap between sentences, because each sentence is a separate file.
 
-While the robot is processing or speaking, the talk sensor and bumpers are ignored but **logged** with `robot_state` and `ignored_reason`. `ALLOW_BARGE_IN = True` lets a head touch stop the robot's speech.
+While the robot is processing or speaking, the talk sensor and bumpers are ignored but **logged** with `robot_state` and `ignored_reason`. `ALLOW_BARGE_IN = True` lets a right-bumper press stop the robot's speech.
 
 ### Transcription options (`TRANSCRIBE_BACKEND`)
 
@@ -119,7 +119,7 @@ Identity questions are found by keyword matching (`IDENTITY_QUESTION_PATTERNS`),
 
 - [ ] Robot on, charged, connected; `ping <ip>` works; **same network setup (Wi-Fi vs. cable, router) as the pilot**
 - [ ] Robot on the floor with free space around it (it moves to the configured posture at startup)
-- [ ] `tools/sensor_probe.py` passed today: front head = `TALK_SENSOR_KEY`, both bumpers fire
+- [ ] `tools/sensor_probe.py` passed today: right bumper = `TALK_SENSOR_KEY`, left bumper = `CHECK_SENSOR_KEYS`; both fire
 - [ ] Build area on the marked spot, lighting as in the test photos; `camera_probe.py --set-head` framing checked
 - [ ] Volume (`VOLUME`) checked at the participant's seat
 - [ ] `target_description.txt`, `target_structure.json` and `fixed_lines.json` are the final versions (no TODO); `pregenerate_audio.py` run after the last edit

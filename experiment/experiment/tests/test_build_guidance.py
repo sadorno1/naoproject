@@ -12,6 +12,7 @@ import config
 import vision
 from nao_proxy import NaoProxy, photo_result_path
 from run_session import Session
+from inputs import InputManager, RECORDING, PROCESSING, SPEAKING
 
 
 class BuildTests(unittest.TestCase):
@@ -111,6 +112,55 @@ class BuildTests(unittest.TestCase):
         image = Image.new("RGB", (1280, 960), "lightblue")
         jpeg = vision.preprocess_image(image)
         self.assertEqual(Image.open(io.BytesIO(jpeg)).size, (1280, 960))
+
+
+class BumperControlTests(unittest.TestCase):
+    def setUp(self):
+        self.inputs = InputManager(Mock())
+        self.callbacks = {}
+        nao = Mock()
+
+        def subscribe(key, callback):
+            self.callbacks[key] = callback
+            return True
+
+        nao.subscribe.side_effect = subscribe
+        self.inputs.attach(nao)
+
+    def test_only_right_talk_and_left_check_are_subscribed(self):
+        self.assertEqual(set(self.callbacks), {"RightBumperPressed", "LeftBumperPressed"})
+        self.assertEqual(self.inputs.talk_key, "RightBumperPressed")
+        self.assertEqual(self.inputs.check_keys, ["LeftBumperPressed"])
+
+    def test_right_bumper_hold_and_release_records_without_camera_check(self):
+        self.callbacks["RightBumperPressed"](1.0)
+        self.assertEqual(self.inputs.state, RECORDING)
+        self.assertEqual(self.inputs.events.get_nowait()[0], "talk_press")
+        self.callbacks["RightBumperPressed"](0.0)
+        self.assertEqual(self.inputs.state, PROCESSING)
+        self.assertEqual(self.inputs.events.get_nowait()[0], "talk_release")
+        self.assertTrue(self.inputs.events.empty())
+
+    def test_left_bumper_requests_only_one_check(self):
+        self.callbacks["LeftBumperPressed"](1.0)
+        event = self.inputs.events.get_nowait()
+        self.assertEqual((event[0], event[2]), ("check", "LeftBumperPressed"))
+        self.callbacks["LeftBumperPressed"](0.0)
+        self.assertTrue(self.inputs.events.empty())
+
+    def test_left_bumper_is_ignored_while_right_bumper_records(self):
+        self.callbacks["RightBumperPressed"](1.0)
+        self.inputs.events.get_nowait()
+        self.callbacks["LeftBumperPressed"](1.0)
+        self.assertEqual(self.inputs.state, RECORDING)
+        self.assertTrue(self.inputs.events.empty())
+
+    def test_right_bumper_is_ignored_while_speaking(self):
+        self.inputs.set_state(SPEAKING)
+        self.callbacks["RightBumperPressed"](1.0)
+        self.callbacks["RightBumperPressed"](0.0)
+        self.assertTrue(self.inputs.events.empty())
+        self.assertEqual(self.inputs.state, SPEAKING)
 
 
 class ReferenceContextTests(unittest.TestCase):

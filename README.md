@@ -1,6 +1,6 @@
 # NAO Mega Bloks Build Guidance
 
-A NAO robot guides a participant step by step through building a small structure out of Mega Bloks. Participants talk to the robot by holding its head sensor. They ask it to check their build by pressing its foot. The robot looks at the build with its camera, tells them what to fix, and ends the session once the structure matches the target.
+A NAO robot guides a participant step by step through building a small structure out of Mega Bloks. Participants talk to the robot by holding its right foot bumper. They ask it to check their build by pressing its left foot bumper. The robot looks at the build with its camera, tells them what to fix, and ends the session once the structure matches the target.
 
 The code is for a between-subjects study. Participants are told that the robot is controlled either by an **AI** or by a **human**. The robot's behavior is the same in both conditions: the same prompt, voice, gestures and timing. The condition label is only written to the session log.
 
@@ -13,13 +13,13 @@ The current target is a two-layer wall using four Mega Bloks pieces: two light-b
 ## What the code does
 
 **Talking to the robot**
-1. The participant holds the robot's **front head sensor** to speak, and the eyes turn green. The robot records audio with its microphone.
+1. The participant holds the robot's **right foot bumper** to speak, and the eyes turn green. The robot records audio with its microphone.
 2. When the sensor is released, the recording is copied to the laptop, transcribed with OpenAI speech-to-text, and deleted. No raw audio is kept.
 3. A language model writes a reply of one or two sentences. The first line of the reply picks an expression label. Physical gestures are disabled by default for calm motion; optional gestures are spaced apart and cannot overlap.
 4. The reply is converted to speech and played on the robot one sentence at a time, so the robot starts talking before the full reply has been generated.
 
 **Checking the build**
-1. The participant presses a **foot bumper**. The robot says "let me take a look" and takes a photo with its head camera.
+1. The participant presses a **left foot bumper**. The robot says "let me take a look" and takes a photo with its head camera.
 2. A vision model turns the photo into structured JSON describing each block's color, size, position, layer and orientation.
 3. Python code compares that description to the target structure. It reports which blocks are correct, wrong (moved, rotated, on the wrong layer, or extra) or not placed yet.
 4. The language model turns the result into a spoken hint. A full, clear match ends the session with a goodbye. If the camera view is unclear or no blocks are visible, NAO asks for a clearer view instead of treating unseen blocks as mistakes.
@@ -53,7 +53,7 @@ experiment/experiment/
   vision.py                      photo -> block JSON -> comparison with the target
   nao_proxy.py                   wrapper around the NAOqi services (LEDs, motion, camera, audio)
   robot_link.py                  SSH/SFTP file transfer to and from the robot
-  inputs.py                      head-sensor and bumper handling
+  inputs.py                      right-foot talk and left-foot check handling
   session_log.py                 event logging
   prompts/                       system prompt, target structure, vision prompt, fixed lines
   tools/                         setup and analysis scripts (see below)
@@ -91,7 +91,7 @@ OPENAI_API_KEY=sk-...
 Run these from `experiment/experiment/`:
 
 ```bash
-python tools/sensor_probe.py <robot-ip>         # check the head sensor and bumper names match config.py
+python tools/sensor_probe.py <robot-ip>         # check the right talk and left check bumper names match config.py
 python tools/camera_probe.py <robot-ip> --set-head --camera 0 --out tmp/camera_top
 python tools/camera_probe.py <robot-ip> --set-head --camera 1 --out tmp/camera_bottom
 python tools/gesture_probe.py <robot-ip> --list-all  # check the seated animations exist
@@ -108,7 +108,7 @@ cd experiment/experiment
 python run_session.py --ip <robot-ip> --pid P01 --condition ai      # or --condition human
 ```
 
-- The robot sits down, greets the participant and gives the first step. After that, it responds to head-sensor speech and bumper presses.
+- The robot sits down, greets the participant and gives the first step. After that, it responds to right-bumper speech and left-bumper check presses.
 - Press **`q`** in the terminal to end a session early.
 - Data is saved to `data/<pid>/`. The script refuses to reuse an existing participant ID unless you pass `--force-new`.
 
@@ -148,7 +148,7 @@ python tools/pregenerate_audio.py
 python run_session.py --ip ROBOT_IP --pid wall_robot01 --condition ai --force-new
 ```
 
-The sensor probe stays running to show touch events; press Ctrl+C after testing the head and foot sensors, then run the next two commands. During a session, hold the front head sensor to speak and release it to send speech. Press a foot bumper to check the build; press `q` in the terminal to stop. Test an empty view, a partial wall, a deliberately misplaced piece, and the finished wall. Confirm calm motion and that unclear/hidden pieces do not lead to a false success. Photos and check results are saved under `data/` for review.
+The sensor probe stays running to show touch events; press Ctrl+C after testing both foot bumpers, then run the next two commands. During a session, hold NAO's right foot bumper to speak and release it to send speech. Press NAO's left foot bumper to check the build; press `q` in the terminal to stop. Test an empty view, a partial wall, a deliberately misplaced piece, and the finished wall. Confirm calm motion and that unclear/hidden pieces do not lead to a false success. Photos and check results are saved under `data/` for review.
 
 ### 6. Summarize logs
 

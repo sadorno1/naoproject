@@ -84,7 +84,7 @@ python tools/pregenerate_audio.py
 python run_session.py --ip ROBOT_IP --pid P01 --condition ai
 ```
 
-Press a foot bumper to check the build. Vision still runs on demand, rather than continuously. Checks preserve more image detail, distinguish your two target footprints and the difference between light blue and blue, and ask for a clearer view if the frame is unclear or no blocks are seen. Uncertain extra blocks prevent a success result.
+Press NAO's left foot bumper to check the build. Vision still runs on demand, rather than continuously. Checks preserve more image detail, distinguish your two target footprints and the difference between light blue and blue, and ask for a clearer view if the frame is unclear or no blocks are seen. Uncertain extra blocks prevent a success result.
 
 ## Offline verification
 
@@ -110,3 +110,9 @@ python tools/eval_vision.py test_photos --models gpt-4.1 --repeat 3 --no-referen
 Review false matches, missed correct walls, and inconsistent repeats. Rehearse all four placements with a fresh participant ID. Clear hands and press the bumper at each step. The photo evaluator checks final match decisions; it does not test spoken guidance. Use the model already configured as a baseline before changing models. A reference photo must also be evaluated rather than assumed to help.
 
 Offline tests use simulated observations. Live camera/API evaluation and physical robot rehearsal must be done on your setup. Never substitute a recorded image for a live check during the demo.
+
+## Talk and check controls
+
+Hold NAO's **right foot bumper** to record speech; release it to send. Press NAO's **left foot bumper** to check the build. The head sensor no longer starts speech. Left/right refer to NAO's own sides, so they are mirrored when you face it. The eyes turn green while recording. Busy inputs remain ignored unless barge-in is enabled.
+
+The greeting now explains these controls. After pulling, run `python tools/pregenerate_audio.py` from `experiment/experiment` to cache the new greeting, then restart the session. Old audio is not reused for changed text. Verify the bumper names with `python tools/sensor_probe.py ROBOT_IP` before the demo.
