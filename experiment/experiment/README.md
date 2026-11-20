@@ -51,6 +51,14 @@ python tools/capture_build_steps.py ROBOT_IP --build build_2
 python tools/capture_build_steps.py ROBOT_IP --build build_3
 ```
 
+For a simpler collection to upload all at once, instead run:
+
+```bash
+python run_session.py --photo-mode --ip ROBOT_IP
+```
+
+Tap and release the front head sensor for each numbered photo; press Ctrl+C to stop and make a ZIP. The complete ZIP path is printed. This mode needs no API key, participant ID or finished step files and does not start a participant session. Originals and the ZIP go into the Git-ignored `photo_sessions/` folder; optionally choose another parent with `--photo-dir ~/nao_photos`. Photos are unassigned until you match them to activity/step folders. The tool does not upload anything automatically.
+
 In this authoring tool only, tap and release the front head sensor after arranging each cumulative placement. The tutorial starts at `step_03`; the first two steps are control exercises. Ctrl+C stops. Existing photos are not overwritten. Review each photo, fill its neighboring `step.json`, and set `ready` to true.
 
 After authoring the steps:

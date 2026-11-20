@@ -567,8 +567,8 @@ def parse_args(argv=None):
     from build_workflow import BUILDS_DIR, ACTIVITIES
     parser = argparse.ArgumentParser(description="Run one Mega Bloks build session with the NAO.")
     parser.add_argument("--ip", help="robot IP (not needed with --dry-run)")
-    parser.add_argument("--pid", required=True, help="participant ID (also the data folder name)")
-    parser.add_argument("--condition", required=True, choices=["ai", "human"],
+    parser.add_argument("--pid", help="participant ID (required outside photo mode)")
+    parser.add_argument("--condition", choices=["ai", "human"],
                         help="study condition; only written to the log")
     parser.add_argument("--force-new", action="store_true",
                         help="if the participant folder exists, create a timestamped subfolder instead of refusing")
@@ -578,7 +578,19 @@ def parse_args(argv=None):
     parser.add_argument("--builds-dir", default=str(BUILDS_DIR), help="folder containing tutorial and three builds")
     parser.add_argument("--activity", choices=ACTIVITIES, help="optional single activity for rehearsal; default runs all four")
     parser.add_argument("--legacy-build", action="store_true", help="run the old single four-block demo")
+    parser.add_argument("--photo-mode", action="store_true", help="head-tap camera only; Ctrl+C makes a ZIP for upload")
+    parser.add_argument("--photo-dir", help="output parent folder for --photo-mode (default: photo_sessions beside this script)")
     args = parser.parse_args(argv)
+    if args.photo_mode:
+        if not args.ip:
+            parser.error("--photo-mode requires --ip")
+        if args.dry_run or args.no_tts or args.legacy_build or args.activity or args.image or args.pid or args.condition or args.force_new:
+            parser.error("--photo-mode runs by itself; use --ip and optionally --photo-dir")
+        return args
+    if args.photo_dir:
+        parser.error("--photo-dir is only used with --photo-mode")
+    if not args.pid or not args.condition:
+        parser.error("--pid and --condition are required for participant sessions")
     if not args.dry_run and not args.ip:
         parser.error("--ip is required unless --dry-run is set")
     if args.no_tts and not args.dry_run:
@@ -590,6 +602,9 @@ def parse_args(argv=None):
 
 def main(argv=None):
     args = parse_args(argv)
+    if args.photo_mode:
+        from photo_mode import PHOTO_DIR, run_photo_mode
+        return run_photo_mode(args.ip, args.photo_dir or PHOTO_DIR)
     if not args.dry_run and args.legacy_build:
         problems = placeholder_problems()
         if problems:

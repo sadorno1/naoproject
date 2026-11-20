@@ -108,6 +108,26 @@ python tools/camera_probe.py ROBOT_IP --set-head --camera 1 --out tmp/camera_bot
 
 Open the saved images. Choose a view that shows the entire build, large studs and seams. Save the chosen `CAMERA_INDEX`, `HEAD_PITCH`, `HEAD_YAW` and capture method in `config.py`; the probe only previews settings. Keep posture, build spot and lighting consistent for references and participant checks.
 
+## Quick photo-only mode: collect everything for upload
+
+From `experiment/experiment`:
+
+```bash
+python run_session.py --photo-mode --ip ROBOT_IP
+```
+
+This starts only the robot camera and the front head sensor. No API key, participant ID, condition, completed build files, conversation or speech generation is needed. Arrange each build state, clear hands, then **tap and release the front head sensor** to save `photo_001.jpg`, `photo_002.jpg`, and so on. A short settling delay lets the head return to its configured pose. Bumpers are inactive in this mode. Do not run it alongside a participant session or another camera tool.
+
+Press **Ctrl+C** when all photos are taken. A ZIP containing every saved photo and a `manifest.json` with capture settings/timestamps is created, and its full path is printed. Upload that ZIP manually to share the whole collection at once. Original photos are retained too. Each run creates a separate timestamped folder and ZIP under `experiment/experiment/photo_sessions/`, which is Git-ignored. Nothing is uploaded automatically.
+
+To choose a different output parent folder:
+
+```bash
+python run_session.py --photo-mode --ip ROBOT_IP --photo-dir ~/nao_photos
+```
+
+These are unassigned photos: they do not automatically become approved step references. Keep track of which numbered images belong to the tutorial and each build, so they can be placed beside the correct step instructions afterward. To capture directly into the step folders instead, use the authoring tool below. Head tapping remains absent from participant sessions.
+
 ## Prepare the mini build and three main builds
 
 From `experiment/experiment`, run the author-only capture tool for each activity:

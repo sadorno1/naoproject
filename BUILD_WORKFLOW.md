@@ -49,6 +49,8 @@ The tutorial is supplied with controls instructions and two draft mini-build pla
 
 ## Capture reference photos by tapping the head
 
+If you want to take an unassigned collection and upload all photos together before arranging the step files, use `python run_session.py --photo-mode --ip ROBOT_IP` from `experiment/experiment`. Tap/release the head sensor for each photo and press Ctrl+C when finished. This creates a numbered collection and an upload ZIP under `photo_sessions/` and prints the ZIP path. It needs no API key or authored steps. It does not assign or approve references automatically. The instructions below are for capturing directly into named activity/step folders instead.
+
 Stop any running participant session first. Use the same robot posture, build spot, camera and head pose you plan to use during the session; set these in `config.py`. This tool uses those settings and restores background movement on exit. Camera/head/posture metadata is checked at session startup when available. Physical build placement and lighting still need a visual check.
 
 On Linux, from the repository root:

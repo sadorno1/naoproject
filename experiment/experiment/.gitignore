@@ -2,6 +2,7 @@
 data/
 audio_cache/
 tmp/
+photo_sessions/
 test_photos/**/*.jpg
 test_photos/**/*.jpeg
 test_photos/**/*.png
